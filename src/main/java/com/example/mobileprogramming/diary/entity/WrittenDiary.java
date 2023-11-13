@@ -19,7 +19,7 @@ public class WrittenDiary {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "written_diary_id", nullable = false)
-    private Long written_diary_id;
+    private Long writtenDiaryId;
 
     @Column(name = "written_date")
     private Timestamp writtenDate;

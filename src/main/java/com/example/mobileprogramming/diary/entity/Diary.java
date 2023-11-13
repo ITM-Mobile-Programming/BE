@@ -38,9 +38,13 @@ public class Diary extends BaseTimeEntity {
     @Column(name = "is_public")
     private String isPublic;
 
-    @OneToMany(mappedBy = "diary_to_hashTag_id", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "diaryToHashTagId", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<DiaryToHashTag> hashTags = new ArrayList<>();
+
+    @OneToMany(mappedBy = "writtenDiaryId", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<WrittenDiary> writtenDiaries = new ArrayList<>();
 
     @Builder
     public Diary(Long diaryId, String title, String location, String weatherCode, String mbtiCode, String thumbnailUrl, String isPublic) {

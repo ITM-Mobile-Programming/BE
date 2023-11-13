@@ -26,7 +26,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    implementation 'mysql:mysql-connector-java:8.0.23'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    //security && JWT
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'io.jsonwebtoken:jjwt:0.9.1'
+    implementation group: 'com.auth0', name: 'java-jwt', version: '3.4.0'
+
+    //JSON
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.5'
 }
 
 tasks.named('bootBuildImage') {

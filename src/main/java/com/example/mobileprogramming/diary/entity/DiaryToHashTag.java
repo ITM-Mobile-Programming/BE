@@ -18,7 +18,7 @@ public class DiaryToHashTag extends BaseTimeEntity {
     private Long diaryToHashTagId;
 
     @ManyToOne
-    @JoinColumn(name = "suite_room_id")
+    @JoinColumn(name = "diary_id")
     @JsonBackReference
     private Diary diary;
 

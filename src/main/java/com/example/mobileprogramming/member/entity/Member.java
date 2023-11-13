@@ -1,6 +1,7 @@
 package com.example.mobileprogramming.member.entity;
 
 import com.example.mobileprogramming.baseTime.BaseTimeEntity;
+import com.example.mobileprogramming.diary.entity.WrittenDiary;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Builder;
 import lombok.Getter;
@@ -35,6 +36,10 @@ public class Member extends BaseTimeEntity {
     @OneToMany(mappedBy = "id", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<Friend> friends = new ArrayList<>();
+
+    @OneToMany(mappedBy = "writtenDiaryId", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<WrittenDiary> writtenDiaries = new ArrayList<>();
 
     @Builder
     public Member(Long memberId, String nickName, String code, String introduce, String profileUrl) {
