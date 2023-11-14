@@ -28,6 +28,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     implementation 'mysql:mysql-connector-java:8.0.23'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'com.h2database:h2'
 
     //security && JWT
     implementation 'org.springframework.boot:spring-boot-starter-security'

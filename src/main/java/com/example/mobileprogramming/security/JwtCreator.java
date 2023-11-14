@@ -35,12 +35,12 @@ public class JwtCreator {
 
     // 토큰 생성
     public Token createToken(Member member) {  // userPK = email
-        Claims claims = Jwts.claims().setSubject(member.getNickName()); // JWT payload 에 저장되는 정보단위
+        Claims claims = Jwts.claims().setSubject(member.getEmail()); // JWT payload 에 저장되는 정보단위
         Date now = new Date();
         String accessToken = getToken(member, claims, now, accessTokenValidTime, accessSecretKey);
         return Token.builder()
                 .accessToken(accessToken)
-                .key(member.getNickName()).build();
+                .key(member.getEmail()).build();
     }
 
     private String getToken(Member member, Claims claims, Date currentTime, long tokenValidTime, String secretKey) {

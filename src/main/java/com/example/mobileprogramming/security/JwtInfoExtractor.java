@@ -26,8 +26,6 @@ public class JwtInfoExtractor {
         if (authentication instanceof JwtAuthenticationToken) {
             Claims claims = ((JwtAuthenticationToken) authentication).getClaims();
 
-
-
             return AuthorizerDto.builder()
                     .memberId(Long.parseLong(claims.get(AuthorizerDto.ClaimName.ID.getValue()).toString()))
                     .nickName(claims.get(AuthorizerDto.ClaimName.NICKNAME.getValue()).toString())

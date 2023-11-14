@@ -16,15 +16,19 @@ import java.util.List;
 @NoArgsConstructor
 @Table(name = "member")
 public class Member extends BaseTimeEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_id", nullable = false)
     private Long memberId;
 
+    @Column(name = "email", unique = true)
+    private String email;
+
     @Column(name = "nick_name")
     private String nickName;
 
-    @Column(name = "code")
+    @Column(name = "code", nullable = false)
     private String code;
 
     @Column(name = "introduce")
@@ -42,8 +46,9 @@ public class Member extends BaseTimeEntity {
     private List<WrittenDiary> writtenDiaries = new ArrayList<>();
 
     @Builder
-    public Member(Long memberId, String nickName, String code, String introduce, String profileUrl) {
+    public Member(Long memberId, String email, String nickName, String code, String introduce, String profileUrl) {
         this.memberId = memberId;
+        this.email = email;
         this.nickName = nickName;
         this.code = code;
         this.introduce = introduce;

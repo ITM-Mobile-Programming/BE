@@ -1,10 +1,10 @@
 package com.example.mobileprogramming.security.config;
 
-import com.suite.suite_user_service.member.security.JwtInfoExtractor;
-import com.suite.suite_user_service.member.security.JwtValidator;
-import com.suite.suite_user_service.member.security.filter.JwtAuthenticationFilter;
-import com.suite.suite_user_service.member.security.handler.AuthenticationEntryPointHandler;
-import com.suite.suite_user_service.member.security.handler.WebAccessDeniedHandler;
+import com.example.mobileprogramming.security.JwtInfoExtractor;
+import com.example.mobileprogramming.security.JwtValidator;
+import com.example.mobileprogramming.security.filter.JwtAuthenticationFilter;
+import com.example.mobileprogramming.security.handler.AuthenticationEntryPointHandler;
+import com.example.mobileprogramming.security.handler.WebAccessDeniedHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
