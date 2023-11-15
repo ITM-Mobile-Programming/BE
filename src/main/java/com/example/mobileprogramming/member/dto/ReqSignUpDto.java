@@ -16,16 +16,13 @@ public class ReqSignUpDto {
     private String introduce;
 
     @Builder
-    public ReqSignUpDto(String nickName,String password ,String introduce) {
+    public ReqSignUpDto(String email, String password, String nickName, String introduce) {
+        this.email = email;
+        this.password = password;
         this.nickName = nickName;
         this.introduce = introduce;
-        this.password = password;
     }
 
-    public void appendDtoEmail(String email) {
-        this.email = email;
-
-    }
     public void appendDtoCode(String code) {
         this.code = code;
     }
@@ -39,6 +36,7 @@ public class ReqSignUpDto {
                 .nickName(this.nickName)
                 .introduce(this.introduce)
                 .email(this.email)
+                .password(this.password)
                 .code(this.code)
                 .build();
     }

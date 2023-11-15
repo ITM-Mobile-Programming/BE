@@ -35,6 +35,7 @@ class MemberServiceImplTest {
         //given
         String googleOAuthEmail = "lopahn2@gmail.com";
         ReqSignUpDto reqSignUpDto = ReqSignUpDto.builder()
+                .email(googleOAuthEmail)
                 .nickName("hwany")
                 .password("1q2w3e4r")
                 .introduce("ITM19")
@@ -44,7 +45,6 @@ class MemberServiceImplTest {
 
         String code = generateSHA256Hash(googleOAuthEmail);
 
-        reqSignUpDto.appendDtoEmail(googleOAuthEmail);
         reqSignUpDto.appendDtoCode(code);
         reqSignUpDto.encodePassword(passwordEncoder);
 

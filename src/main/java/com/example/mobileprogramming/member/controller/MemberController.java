@@ -16,9 +16,8 @@ import java.util.HashMap;
 public class MemberController {
     private final MemberService memberService;
     @PostMapping(value = "/oAuth")
-    public ResponseEntity<Message> oAuthGate(@RequestHeader("Authorization") String accessToken) {
-        memberService.checkMemberStatus(accessToken);
-        return ResponseEntity.ok(new Message(StatusCode.OK));
+    public ResponseEntity<Message> oAuthGate(@RequestBody HashMap<String, String> accessToken) {
+        return ResponseEntity.ok(memberService.checkMemberStatus(accessToken.get("access_token")));
     }
     @PostMapping(value = "/oAuth/signUp")
     public ResponseEntity<Message> oAuthSignUp(@RequestBody ReqSignUpDto reqSignUpDto) {

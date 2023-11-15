@@ -5,6 +5,8 @@ import com.example.mobileprogramming.handler.StatusCode;
 import com.example.mobileprogramming.member.dto.ReqSignUpDto;
 import com.example.mobileprogramming.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,9 +25,13 @@ public class ProfileController {
     }
 
     @GetMapping(value = "/read/{memberId}")
-    public ResponseEntity<Message> requestProfileImage(@PathVariable Long memberId) {
+    public ResponseEntity requestProfileImage(@PathVariable Long memberId) {
+        Resource imageResource = memberService.getProfile(memberId);
 
-        return ResponseEntity.ok(new Message(StatusCode.OK));
+        // Set the content type as image/jpeg
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(imageResource);
     }
 
 }

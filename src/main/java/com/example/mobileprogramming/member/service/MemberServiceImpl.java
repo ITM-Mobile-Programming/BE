@@ -12,11 +12,14 @@ import com.example.mobileprogramming.member.repository.MemberRepository;
 import com.example.mobileprogramming.security.JwtCreator;
 import com.example.mobileprogramming.security.dto.Token;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.file.ConfigurationSource;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -28,7 +31,6 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -55,6 +57,7 @@ public class MemberServiceImpl implements MemberService{
     }
 
     @Override
+    @Transactional
     public void saveMember(ReqSignUpDto reqSignUpDto) {
         memberRepository.findByEmail(reqSignUpDto.getEmail()).ifPresent(member -> { throw new CustomException(StatusCode.REGISTERED_EMAIL); });
 
@@ -65,21 +68,26 @@ public class MemberServiceImpl implements MemberService{
     }
 
     @Override
+    @Transactional
     public void uploadProfile(Long memberId, MultipartFile multipartFile) {
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
         member.updateProfileUrl(saveProfileImage(memberId, multipartFile));
     }
 
     @Override
-    public ResProfileDto getProfile(Long memberId) {
+    public ByteArrayResource getProfile(Long memberId) {
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
-
         try {
-            byte[] fileBytes = Files.readAllBytes(Paths.get(member.getProfileUrl()));
-            String base64Image = Base64.getEncoder().encodeToString(fileBytes);
-            return ResProfileDto.builder()
-                    .base64ProfileImage(base64Image)
-                    .build();
+            Path imagePath = Paths.get(PROFILE_UPLOAD_URL + member.getProfileUrl());
+            byte[] imageBytes = Files.readAllBytes(imagePath);
+            // Create a ByteArrayResource from the byte array
+            ByteArrayResource resource = new ByteArrayResource(imageBytes);
+
+            if (resource.exists() && resource.isReadable()) {
+                return resource;
+            } else {
+                throw new CustomException(StatusCode.NOT_FOUND);
+            }
         } catch (IOException e) {
             e.printStackTrace();
             throw new CustomException(StatusCode.FAILED_REQUEST);
