@@ -3,8 +3,10 @@ package com.example.mobileprogramming.common.dto;
 
 import com.example.mobileprogramming.handler.StatusCode;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class Message {
     public static final String DEFAULT_RESPONSE = "Request processed successfully";
     private int statusCode;

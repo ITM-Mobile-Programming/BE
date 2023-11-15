@@ -21,6 +21,7 @@ public enum StatusCode {
     REGISTERED_EMAIL(400, "등록된 회원입니다.", HttpStatus.BAD_REQUEST),
     NOT_FOUND(404, "일치하는 정보가 없습니다.", HttpStatus.NOT_FOUND),
     FAILED_REQUEST(400, "요청에 실패하였습니다.", HttpStatus.BAD_REQUEST),
+    NOT_EXIST_FILE(400, "파일이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     INVALID_DATA_FORMAT(400, "형식이 맞지 않습니다.", HttpStatus.BAD_REQUEST),
     ;
     @Getter

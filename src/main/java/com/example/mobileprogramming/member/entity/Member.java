@@ -25,6 +25,9 @@ public class Member extends BaseTimeEntity {
     @Column(name = "email", unique = true)
     private String email;
 
+    @Column(name = "password")
+    private String password;
+
     @Column(name = "nick_name")
     private String nickName;
 
@@ -46,14 +49,17 @@ public class Member extends BaseTimeEntity {
     private List<WrittenDiary> writtenDiaries = new ArrayList<>();
 
     @Builder
-    public Member(Long memberId, String email, String nickName, String code, String introduce, String profileUrl) {
+    public Member(Long memberId, String email, String password, String nickName, String code, String introduce, String profileUrl) {
         this.memberId = memberId;
         this.email = email;
+        this.password = password;
         this.nickName = nickName;
         this.code = code;
         this.introduce = introduce;
         this.profileUrl = profileUrl;
     }
 
-
+    public void updateProfileUrl(String profileUrl) {
+        this.profileUrl = profileUrl;
+    }
 }

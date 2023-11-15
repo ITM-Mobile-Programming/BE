@@ -1,5 +1,6 @@
 package com.example.mobileprogramming.member.service;
 
+import com.example.mobileprogramming.common.config.TestConfig;
 import com.example.mobileprogramming.handler.CustomException;
 import com.example.mobileprogramming.handler.StatusCode;
 import com.example.mobileprogramming.member.dto.ReqSignUpDto;
@@ -10,7 +11,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
@@ -22,8 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Transactional
 @DataJpaTest
+@Import(TestConfig.class)
 class MemberServiceImplTest {
     @Autowired private MemberRepository memberRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     @Test
     @DisplayName("회원가입 - signUp")
@@ -32,13 +36,17 @@ class MemberServiceImplTest {
         String googleOAuthEmail = "lopahn2@gmail.com";
         ReqSignUpDto reqSignUpDto = ReqSignUpDto.builder()
                 .nickName("hwany")
+                .password("1q2w3e4r")
                 .introduce("ITM19")
                 .build();
         //when
+        memberRepository.findByEmail(googleOAuthEmail).ifPresent(member -> { throw new CustomException(StatusCode.REGISTERED_EMAIL); });
+
         String code = generateSHA256Hash(googleOAuthEmail);
 
         reqSignUpDto.appendDtoEmail(googleOAuthEmail);
         reqSignUpDto.appendDtoCode(code);
+        reqSignUpDto.encodePassword(passwordEncoder);
 
         Member member = reqSignUpDto.toMember();
         memberRepository.save(member);
@@ -52,7 +60,18 @@ class MemberServiceImplTest {
 
     }
 
-    public static String generateSHA256Hash(String input) {
+    @Test
+    @DisplayName("로그인 - signIn")
+    public void getToken() {
+        //given
+
+
+        //when
+
+        //then
+    }
+
+    private String generateSHA256Hash(String input) {
         try {
             // Create SHA-256 Hash
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

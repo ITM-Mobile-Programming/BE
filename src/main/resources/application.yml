@@ -22,4 +22,7 @@ jwt:
     key: aenoinawblkvnlakdnlvkaef
     validTime: 6048000000 # 70 day
 
+upload:
+  url:
+    profile: src/main/resources/profile/
 

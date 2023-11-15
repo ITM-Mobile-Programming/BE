@@ -7,22 +7,25 @@ import com.example.mobileprogramming.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/member")
-public class MemberController {
+@RequestMapping("/profile")
+public class ProfileController {
     private final MemberService memberService;
-    @PostMapping(value = "/oAuth")
-    public ResponseEntity<Message> oAuthGate(@RequestHeader("Authorization") String accessToken) {
-        memberService.checkMemberStatus(accessToken);
+
+    @PostMapping(value = "/upload/{memberId}", consumes = {"multipart/form-data"})
+    public ResponseEntity<Message> uploadProfileImage(@PathVariable Long memberId, @RequestPart(required = false) MultipartFile file) {
+        memberService.uploadProfile(memberId, file);
         return ResponseEntity.ok(new Message(StatusCode.OK));
     }
-    @PostMapping(value = "/oAuth/signUp")
-    public ResponseEntity<Message> oAuthSignUp(@RequestBody ReqSignUpDto reqSignUpDto) {
-        memberService.saveMember(reqSignUpDto);
+
+    @GetMapping(value = "/read/{memberId}")
+    public ResponseEntity<Message> requestProfileImage(@PathVariable Long memberId) {
+
         return ResponseEntity.ok(new Message(StatusCode.OK));
     }
+
 }

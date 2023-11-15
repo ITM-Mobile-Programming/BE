@@ -1,10 +1,145 @@
 package com.example.mobileprogramming.member.service;
 
+import com.example.mobileprogramming.common.dto.Message;
+import com.example.mobileprogramming.handler.CustomException;
+import com.example.mobileprogramming.handler.StatusCode;
+import com.example.mobileprogramming.member.auth.GoogleAuth;
+import com.example.mobileprogramming.member.dto.ReqSignUpDto;
+import com.example.mobileprogramming.member.dto.ResOAuthDto;
+import com.example.mobileprogramming.member.dto.ResProfileDto;
+import com.example.mobileprogramming.member.entity.Member;
+import com.example.mobileprogramming.member.repository.MemberRepository;
+import com.example.mobileprogramming.security.JwtCreator;
+import com.example.mobileprogramming.security.dto.Token;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+import java.util.Date;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class MemberServiceImpl {
+public class MemberServiceImpl implements MemberService{
+    private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final GoogleAuth googleAuth;
+    private final JwtCreator jwtCreator;
 
+    @Value("${upload.url.profile}")
+    private String PROFILE_UPLOAD_URL;
+
+    private final String PROFILE_DEFAULT_FILE_NAME = "POD";
+
+
+    @Override
+    public Message checkMemberStatus(String accessToken) {
+        ResOAuthDto resOAuthDto = googleAuth.getGoogleMemberInfo(accessToken);
+
+        Optional<Token> token = memberRepository.findByEmail(resOAuthDto.getEmail()).map(member -> verifyOauthAccount(resOAuthDto, passwordEncoder));
+        return token.map(podToken -> new Message(StatusCode.OK, podToken)).orElseGet(() -> new Message(StatusCode.CREATED, resOAuthDto));
+    }
+
+    @Override
+    public void saveMember(ReqSignUpDto reqSignUpDto) {
+        memberRepository.findByEmail(reqSignUpDto.getEmail()).ifPresent(member -> { throw new CustomException(StatusCode.REGISTERED_EMAIL); });
+
+        reqSignUpDto.appendDtoCode(generateSHA256Hash(reqSignUpDto.getEmail()));
+        reqSignUpDto.encodePassword(passwordEncoder);
+
+        memberRepository.save(reqSignUpDto.toMember());
+    }
+
+    @Override
+    public void uploadProfile(Long memberId, MultipartFile multipartFile) {
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
+        member.updateProfileUrl(saveProfileImage(memberId, multipartFile));
+    }
+
+    @Override
+    public ResProfileDto getProfile(Long memberId) {
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
+
+        try {
+            byte[] fileBytes = Files.readAllBytes(Paths.get(member.getProfileUrl()));
+            String base64Image = Base64.getEncoder().encodeToString(fileBytes);
+            return ResProfileDto.builder()
+                    .base64ProfileImage(base64Image)
+                    .build();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CustomException(StatusCode.FAILED_REQUEST);
+        }
+    }
+
+    private String generateSHA256Hash(String input) {
+        try {
+            // Create SHA-256 Hash
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+
+            // Convert to hexadecimal representation
+            StringBuilder result = new StringBuilder();
+            for (byte b : hashBytes) {
+                result.append(String.format("%02x", b));
+            }
+
+            // Take the first 10 characters
+            return result.substring(0, 10);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
+        }
+    }
+
+    private Token verifyOauthAccount(ResOAuthDto resOAuthDto,  PasswordEncoder passwordEncoder) {
+        Member member = memberRepository.findByEmail(resOAuthDto.getEmail()).orElseThrow(() -> new CustomException(StatusCode.USERNAME_NOT_FOUND));
+
+        if(!passwordEncoder.matches(resOAuthDto.getPassword(), member.getPassword()))
+            throw new CustomException(StatusCode.REGISTERED_EMAIL);
+
+        Token token = jwtCreator.createToken(member);
+
+        return token;
+    }
+
+    private String parseUUID(Long memberId, String fileName) {
+        StringBuffer sb = new StringBuffer(PROFILE_DEFAULT_FILE_NAME);
+
+        String extension = fileName.substring(fileName.lastIndexOf("."));
+        sb.append(memberId);
+        sb.append(extension);
+
+        return sb.toString();
+    }
+
+    private String saveProfileImage(Long memberId, MultipartFile multipartFile) {
+        if (multipartFile.isEmpty()) return "";
+
+        try {
+            String absoluteProfileDir = new File(PROFILE_UPLOAD_URL).getAbsolutePath();
+            String fileName = parseUUID(memberId, Objects.requireNonNull(multipartFile.getOriginalFilename()));
+            Path destPath = Paths.get(absoluteProfileDir, fileName);
+            Files.write(destPath, multipartFile.getBytes());
+
+            return fileName;
+        } catch (IOException e) {
+            // 파일 저장 실패 시 예외 처리
+            e.printStackTrace();
+            throw new CustomException(StatusCode.FAILED_REQUEST);
+        }
+    }
 }
