@@ -35,8 +35,10 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
     implementation group: 'com.auth0', name: 'java-jwt', version: '3.4.0'
 
-    //JSON
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.5'
+    //json
+    implementation 'com.google.code.gson:gson:2.7'
+    implementation 'commons-io:commons-io:2.6'
+    implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1'
 }
 
 tasks.named('bootBuildImage') {
