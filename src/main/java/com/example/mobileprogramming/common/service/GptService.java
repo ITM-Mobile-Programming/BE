@@ -1,8 +1,10 @@
 package com.example.mobileprogramming.common.service;
 
-public interface GptService {
-    void requestMakeHashTag(String context);
+import java.util.List;
 
-    void requestMakeImage(String prompt);
+public interface GptService {
+    List<String> requestMakeHashTag(String context);
+
+    String requestMakeImage(List<String> hashTags);
 
 }

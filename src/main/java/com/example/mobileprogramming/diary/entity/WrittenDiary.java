@@ -38,4 +38,8 @@ public class WrittenDiary {
         this.writtenDate = writtenDate;
         this.writerId = writerId;
     }
+
+    public void setDiary(Diary diary) {
+        this.diary = diary;
+    }
 }

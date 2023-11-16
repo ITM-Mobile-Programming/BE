@@ -30,4 +30,8 @@ public class HashTag extends BaseTimeEntity {
     public HashTag(String hashTag) {
         this.hashTag = hashTag;
     }
+
+    public void setDiary(Diary diary) {
+        this.diary = diary;
+    }
 }

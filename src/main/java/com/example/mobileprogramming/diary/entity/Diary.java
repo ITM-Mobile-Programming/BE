@@ -35,6 +35,7 @@ public class Diary extends BaseTimeEntity {
     @Column(name = "mbti_code")
     private String mbtiCode;
 
+    @Lob
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
@@ -62,11 +63,13 @@ public class Diary extends BaseTimeEntity {
 
     public void addHashTag(HashTag hashTag) {
         this.hashTags.add(hashTag);
+        hashTag.setDiary(this);
     }
     public void addThumbnailUrl(String imgUrl) {
         this.thumbnailUrl = imgUrl;
     }
     public void addWrittenDiary(WrittenDiary writtenDiary) {
         this.writtenDiary = writtenDiary;
+        writtenDiary.setDiary(this);
     }
 }
