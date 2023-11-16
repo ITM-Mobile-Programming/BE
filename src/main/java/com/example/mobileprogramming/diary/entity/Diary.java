@@ -50,7 +50,6 @@ public class Diary extends BaseTimeEntity {
     @JsonManagedReference
     private List<DiaryToFriend> diaryToFriendId = new ArrayList<>();
     @Builder
-
     public Diary(Long diaryId, String title, String context, String location, String weatherCode, String mbtiCode, String thumbnailUrl) {
         this.diaryId = diaryId;
         this.title = title;
@@ -59,5 +58,15 @@ public class Diary extends BaseTimeEntity {
         this.weatherCode = weatherCode;
         this.mbtiCode = mbtiCode;
         this.thumbnailUrl = thumbnailUrl;
+    }
+
+    public void addHashTag(HashTag hashTag) {
+        this.hashTags.add(hashTag);
+    }
+    public void addThumbnailUrl(String imgUrl) {
+        this.thumbnailUrl = imgUrl;
+    }
+    public void addWrittenDiary(WrittenDiary writtenDiary) {
+        this.writtenDiary = writtenDiary;
     }
 }

@@ -1,6 +1,7 @@
 package com.example.mobileprogramming.diary.service;
 
 import com.example.mobileprogramming.common.config.TestConfig;
+import com.example.mobileprogramming.diary.dto.ReqWriteDiaryDto;
 import com.example.mobileprogramming.diary.entity.Diary;
 import com.example.mobileprogramming.diary.entity.HashTag;
 import com.example.mobileprogramming.diary.entity.WrittenDiary;
@@ -27,6 +28,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -65,8 +67,16 @@ class DiaryServiceImplTest {
         // Image 저장 Logic
 
         Diary diary = reqWriteDiaryDto.toDiary();
-        gptReturn.get("hashTags").map(hashTag -> diary.addHashTag(HashTag.builder().hashTag(hashTag).build()));
-        diary.addThumbnailUrl(gptReturn.get("Image"));
+        List<String> hashTags = (List<String> )gptReturn.get("hashTags");
+
+        hashTags.stream().forEach(hashTag ->
+                diary.addHashTag(HashTag.builder()
+                .hashTag(hashTag)
+                .build())
+        );
+
+        diary.addThumbnailUrl(gptReturn.get("Image").toString());
+
         diary.addWrittenDiary(WrittenDiary.builder()
                 .writerId(writer.getMemberId())
                 .writtenDate(getNowDate())
@@ -78,7 +88,9 @@ class DiaryServiceImplTest {
         Diary assertDiary = diaryRepository.findById(diary.getDiaryId()).orElseThrow(()->new CustomException(StatusCode.NOT_FOUND));
         Assertions.assertAll(
                 () -> assertThat(assertDiary.getDiaryId()).isEqualTo(diary.getDiaryId()),
-                () -> assertThat(assertDiary.getContext()).isEqualTo(diary.getContext())
+                () -> assertThat(assertDiary.getContext()).isEqualTo(diary.getContext()),
+                () -> assertThat(assertDiary.getHashTags().get(0).getHashTag()).isEqualTo("one"),
+                () -> assertThat(assertDiary.getWrittenDiary().getWriterId()).isEqualTo(writer.getMemberId())
         );
     }
 
