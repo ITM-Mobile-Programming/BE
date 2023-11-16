@@ -35,9 +35,6 @@ public class Diary extends BaseTimeEntity {
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
-    @Column(name = "is_public")
-    private String isPublic;
-
     @OneToMany(mappedBy = "diaryToHashTagId", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<DiaryToHashTag> hashTags = new ArrayList<>();
@@ -46,14 +43,16 @@ public class Diary extends BaseTimeEntity {
     @JsonManagedReference
     private List<WrittenDiary> writtenDiaries = new ArrayList<>();
 
+    @OneToMany(mappedBy = "diaryToFriendId", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<DiaryToFriend> diaryToFriendId = new ArrayList<>();
     @Builder
-    public Diary(Long diaryId, String title, String location, String weatherCode, String mbtiCode, String thumbnailUrl, String isPublic) {
+    public Diary(Long diaryId, String title, String location, String weatherCode, String mbtiCode, String thumbnailUrl) {
         this.diaryId = diaryId;
         this.title = title;
         this.location = location;
         this.weatherCode = weatherCode;
         this.mbtiCode = mbtiCode;
         this.thumbnailUrl = thumbnailUrl;
-        this.isPublic = isPublic;
     }
 }

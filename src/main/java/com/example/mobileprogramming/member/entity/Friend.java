@@ -17,6 +17,9 @@ public class Friend extends BaseTimeEntity {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Column(name = "is_accepted")
+    private Boolean isAccepted;
+
     @ManyToOne
     @JoinColumn(name = "member_id")
     @JsonBackReference
