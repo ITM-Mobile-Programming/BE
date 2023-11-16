@@ -25,6 +25,8 @@ jwt:
   access:
     key: aenoinawblkvnlakdnlvkaef
     validTime: 6048000000 # 70 day
+  openai:
+    key: ddd
 
 upload:
   url:
