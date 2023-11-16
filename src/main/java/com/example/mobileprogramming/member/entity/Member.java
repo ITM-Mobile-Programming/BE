@@ -44,9 +44,6 @@ public class Member extends BaseTimeEntity {
     @JsonManagedReference
     private List<Friend> friends = new ArrayList<>();
 
-    @OneToMany(mappedBy = "writtenDiaryId", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference
-    private List<WrittenDiary> writtenDiaries = new ArrayList<>();
 
     @Builder
     public Member(Long memberId, String email, String password, String nickName, String code, String introduce, String profileUrl) {

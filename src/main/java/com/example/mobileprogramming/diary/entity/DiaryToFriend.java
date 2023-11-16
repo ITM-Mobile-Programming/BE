@@ -1,6 +1,7 @@
 package com.example.mobileprogramming.diary.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -23,4 +24,9 @@ public class DiaryToFriend {
     @JoinColumn(name = "diary_id")
     @JsonBackReference
     private Diary diary;
+
+    @Builder
+    public DiaryToFriend(Long friendId) {
+        this.friendId = friendId;
+    }
 }

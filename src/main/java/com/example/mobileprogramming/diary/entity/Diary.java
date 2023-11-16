@@ -23,6 +23,9 @@ public class Diary extends BaseTimeEntity {
     @Column(name = "title")
     private String title;
 
+    @Column(name = "context")
+    private String context;
+
     @Column(name = "location")
     private String location;
 
@@ -35,21 +38,23 @@ public class Diary extends BaseTimeEntity {
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
-    @OneToMany(mappedBy = "diaryToHashTagId", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
-    private List<DiaryToHashTag> hashTags = new ArrayList<>();
+    private List<HashTag> hashTags = new ArrayList<>();
 
-    @OneToMany(mappedBy = "writtenDiaryId", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
-    private List<WrittenDiary> writtenDiaries = new ArrayList<>();
+    private WrittenDiary writtenDiary = new WrittenDiary();
 
-    @OneToMany(mappedBy = "diaryToFriendId", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<DiaryToFriend> diaryToFriendId = new ArrayList<>();
     @Builder
-    public Diary(Long diaryId, String title, String location, String weatherCode, String mbtiCode, String thumbnailUrl) {
+
+    public Diary(Long diaryId, String title, String context, String location, String weatherCode, String mbtiCode, String thumbnailUrl) {
         this.diaryId = diaryId;
         this.title = title;
+        this.context = context;
         this.location = location;
         this.weatherCode = weatherCode;
         this.mbtiCode = mbtiCode;

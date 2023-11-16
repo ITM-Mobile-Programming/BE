@@ -22,20 +22,20 @@ public class WrittenDiary {
     private Long writtenDiaryId;
 
     @Column(name = "written_date")
-    private Timestamp writtenDate;
+    private String writtenDate;
 
-    @ManyToOne
+    @Column(name = "writer_id")
+    private Long writerId;
+
+    @OneToOne
     @JoinColumn(name = "diary_id")
     @JsonBackReference
     private Diary diary;
 
-    @ManyToOne
-    @JoinColumn(name = "member_id")
-    @JsonBackReference
-    private Member member;
 
     @Builder
-    public WrittenDiary(Timestamp writtenDate) {
+    public WrittenDiary(String writtenDate, Long writerId) {
         this.writtenDate = writtenDate;
+        this.writerId = writerId;
     }
 }
