@@ -160,10 +160,15 @@ public class MemberServiceImpl implements MemberService{
         if (multipartFile.isEmpty()) return "";
 
         try {
+            System.out.println("1");
             String absoluteProfileDir = new File(PROFILE_UPLOAD_URL).getAbsolutePath();
+            System.out.println("2");
             String fileName = parseUUID(memberId, Objects.requireNonNull(multipartFile.getOriginalFilename()));
+            System.out.println("3");
             Path destPath = Paths.get(absoluteProfileDir, fileName);
+            System.out.println("4");
             Files.write(destPath, multipartFile.getBytes());
+            System.out.println("5");
 
             return fileName;
         } catch (IOException e) {
