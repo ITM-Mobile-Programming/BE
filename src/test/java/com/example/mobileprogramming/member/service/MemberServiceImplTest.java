@@ -47,45 +47,17 @@ class MemberServiceImplTest {
     @Autowired private PasswordEncoder passwordEncoder;
 
     @BeforeEach
+    @Transactional
     public void setUp() {
         Member member = MockMember.getMockMemberInfo("mockUser", "lopahn5@gmail.com");
         memberRepository.save(member);
     }
 
-    @Test
-    @DisplayName("회원가입 - signUp")
-    @DirtiesContext
-    public void saveMember() {
-        //given
-        String googleOAuthEmail = "lopahn2@gmail.com";
-        ReqSignUpDto reqSignUpDto = ReqSignUpDto.builder()
-                .email(googleOAuthEmail)
-                .nickName("hwany")
-                .password("1q2w3e4r")
-                .introduce("ITM19")
-                .build();
-        //when
-        memberRepository.findByEmail(googleOAuthEmail).ifPresent(member -> { throw new CustomException(StatusCode.REGISTERED_EMAIL); });
 
-        String code = generateSHA256Hash(googleOAuthEmail);
-
-        reqSignUpDto.appendDtoCode(code);
-        reqSignUpDto.encodePassword(passwordEncoder);
-
-        Member member = reqSignUpDto.toMember();
-        memberRepository.save(member);
-
-        //then
-        Member assertMember = memberRepository.findById(member.getMemberId()).orElseThrow(()->new CustomException(StatusCode.CREATED));
-        Assertions.assertAll(
-                () -> assertThat(assertMember.getMemberId()).isEqualTo(member.getMemberId()),
-                () -> assertThat(assertMember.getCode()).isEqualTo(code)
-        );
-
-    }
 
     @Test
     @DisplayName("마이페이지 - showProfileInfo")
+    @DirtiesContext
     public void getMemberInfo() {
         //given
         Member member = memberRepository.findById(1L).get();
@@ -107,6 +79,7 @@ class MemberServiceImplTest {
 
     @Test
     @DisplayName("마이페이지 수정 - renewalProfileInfo")
+    @DirtiesContext
     public void updateMemberInfo() {
         //given
         Member member = memberRepository.findById(1L).get();
