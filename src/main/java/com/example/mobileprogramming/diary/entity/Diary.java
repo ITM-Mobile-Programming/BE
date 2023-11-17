@@ -23,6 +23,7 @@ public class Diary extends BaseTimeEntity {
     @Column(name = "title")
     private String title;
 
+    @Lob
     @Column(name = "context")
     private String context;
 
