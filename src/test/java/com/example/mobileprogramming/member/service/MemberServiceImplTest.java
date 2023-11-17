@@ -16,6 +16,7 @@ import com.example.mobileprogramming.member.dto.ResMemberInfoDto;
 import com.example.mobileprogramming.member.entity.Member;
 import com.example.mobileprogramming.member.mockEntity.MockMember;
 import com.example.mobileprogramming.member.repository.MemberRepository;
+import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,7 +48,6 @@ class MemberServiceImplTest {
     @Autowired private PasswordEncoder passwordEncoder;
 
     @BeforeEach
-    @Transactional
     public void setUp() {
         Member member = MockMember.getMockMemberInfo("mockUser", "lopahn5@gmail.com");
         memberRepository.save(member);
