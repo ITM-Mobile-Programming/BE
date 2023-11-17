@@ -161,11 +161,11 @@ public class MemberServiceImpl implements MemberService{
 
         try {
             System.out.println("1");
-            String absoluteProfileDir = new File(PROFILE_UPLOAD_URL).getAbsolutePath();
+            String absoluteProfileDir = new File("").getAbsolutePath();
             System.out.println("2");
             String fileName = parseUUID(memberId, Objects.requireNonNull(multipartFile.getOriginalFilename()));
             System.out.println("3");
-            Path destPath = Paths.get(absoluteProfileDir, fileName);
+            Path destPath = Paths.get(absoluteProfileDir, PROFILE_UPLOAD_URL, fileName);
             System.out.println("4");
             Files.write(destPath, multipartFile.getBytes());
             System.out.println("5");
