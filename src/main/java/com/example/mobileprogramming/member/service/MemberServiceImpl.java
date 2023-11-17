@@ -1,15 +1,15 @@
 package com.example.mobileprogramming.member.service;
 
 import com.example.mobileprogramming.common.dto.Message;
+import com.example.mobileprogramming.diary.repository.WrittenDiaryRepository;
 import com.example.mobileprogramming.handler.CustomException;
 import com.example.mobileprogramming.handler.StatusCode;
 import com.example.mobileprogramming.member.auth.GoogleAuth;
-import com.example.mobileprogramming.member.dto.ReqSignUpDto;
-import com.example.mobileprogramming.member.dto.ResOAuthDto;
-import com.example.mobileprogramming.member.dto.ResProfileDto;
+import com.example.mobileprogramming.member.dto.*;
 import com.example.mobileprogramming.member.entity.Member;
 import com.example.mobileprogramming.member.repository.MemberRepository;
 import com.example.mobileprogramming.security.JwtCreator;
+import com.example.mobileprogramming.security.dto.AuthorizerDto;
 import com.example.mobileprogramming.security.dto.Token;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.file.ConfigurationSource;
@@ -38,6 +38,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService{
     private final MemberRepository memberRepository;
+    private final WrittenDiaryRepository writtenDiaryRepository;
     private final PasswordEncoder passwordEncoder;
     private final GoogleAuth googleAuth;
     private final JwtCreator jwtCreator;
@@ -92,6 +93,27 @@ public class MemberServiceImpl implements MemberService{
             e.printStackTrace();
             throw new CustomException(StatusCode.FAILED_REQUEST);
         }
+    }
+
+    @Override
+    public ResMemberInfoDto getMemberInfo(AuthorizerDto authorizerDto) {
+        Member member = memberRepository.findById(authorizerDto.getMemberId()).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
+        return ResMemberInfoDto.builder()
+                .diaryCount(writtenDiaryRepository.countByMemberId(member.getMemberId()))
+                .nickName(member.getNickName())
+                .email(member.getEmail())
+                .code(member.getCode())
+                .introduce(member.getIntroduce())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public void updateMemberInfo(ReqUpdateProfileDto reqUpdateProfileDto, AuthorizerDto authorizerDto) {
+        Member member = memberRepository.findById(authorizerDto.getMemberId()).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
+        if (reqUpdateProfileDto.getNickName().isEmpty() || reqUpdateProfileDto.getIntroduce().isEmpty()) throw new CustomException(StatusCode.MALFORMED);
+        member.updateNickName(reqUpdateProfileDto.getNickName());
+        member.updateIntroduce(reqUpdateProfileDto.getIntroduce());
     }
 
     private String generateSHA256Hash(String input) {

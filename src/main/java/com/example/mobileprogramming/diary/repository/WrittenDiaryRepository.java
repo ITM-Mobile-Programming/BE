@@ -15,4 +15,6 @@ public interface WrittenDiaryRepository extends JpaRepository<WrittenDiary, Long
     Optional<WrittenDiary> findByDiary(Diary diary);
 
     List<WrittenDiary> findAllByMemberId(Long memberId);
+
+    Long countByMemberId(Long memberId);
 }
