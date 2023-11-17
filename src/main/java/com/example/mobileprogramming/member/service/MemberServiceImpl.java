@@ -167,6 +167,7 @@ public class MemberServiceImpl implements MemberService{
             System.out.println("3");
             Path destPath = Paths.get(absoluteProfileDir, PROFILE_UPLOAD_URL, fileName);
             System.out.println("4");
+            Files.createDirectories(destPath.getParent());
             Files.write(destPath, multipartFile.getBytes());
             System.out.println("5");
 
