@@ -21,7 +21,7 @@ public class JwtInfoExtractor {
         return Jwts.parser().setSigningKey(accessKey.getBytes()).parseClaimsJws(token).getBody();
     }
 
-    public static AuthorizerDto getSuiteAuthorizer() {
+    public static AuthorizerDto getPODAuthorizer() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof JwtAuthenticationToken) {
             Claims claims = ((JwtAuthenticationToken) authentication).getClaims();

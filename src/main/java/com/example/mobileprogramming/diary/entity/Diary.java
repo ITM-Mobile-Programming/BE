@@ -72,4 +72,11 @@ public class Diary extends BaseTimeEntity {
         this.writtenDiary = writtenDiary;
         writtenDiary.setDiary(this);
     }
+
+    public void updateTitle(String title) {
+        this.title = title;
+    }
+    public void updateContext(String context) {
+        this.context = context;
+    }
 }

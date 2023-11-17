@@ -25,7 +25,7 @@ public class WrittenDiary {
     private String writtenDate;
 
     @Column(name = "writer_id")
-    private Long writerId;
+    private Long memberId;
 
     @OneToOne
     @JoinColumn(name = "diary_id")
@@ -34,9 +34,9 @@ public class WrittenDiary {
 
 
     @Builder
-    public WrittenDiary(String writtenDate, Long writerId) {
+    public WrittenDiary(String writtenDate, Long memberId) {
         this.writtenDate = writtenDate;
-        this.writerId = writerId;
+        this.memberId = memberId;
     }
 
     public void setDiary(Diary diary) {

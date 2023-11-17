@@ -1,7 +1,9 @@
 package com.example.mobileprogramming.diary.service;
 
 import com.example.mobileprogramming.common.config.TestConfig;
+import com.example.mobileprogramming.diary.dto.ReqUpdateDiaryDto;
 import com.example.mobileprogramming.diary.dto.ReqWriteDiaryDto;
+import com.example.mobileprogramming.diary.dto.ResDiaryListDto;
 import com.example.mobileprogramming.diary.entity.Diary;
 import com.example.mobileprogramming.diary.entity.HashTag;
 import com.example.mobileprogramming.diary.entity.WrittenDiary;
@@ -22,6 +24,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
@@ -29,8 +33,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @Transactional
@@ -47,10 +55,38 @@ class DiaryServiceImplTest {
     public void setUp() {
         Member member = MockMember.getMockMemberInfo("mockUser", "lopahn2@gmail.com");
         memberRepository.save(member);
+
+        Member memberSetup = MockMember.getMockMemberInfo("mockUserSetup", "lopahn5@gmail.com");
+        memberRepository.save(memberSetup);
+        ReqWriteDiaryDto reqWriteDiaryDto = ReqWriteDiaryDto.builder()
+                .title("mockup diary")
+                .context("mockup diary")
+                .location("강서구 화곡동")
+                .weatherCode("BAD")
+                .mbtiCode("INTJ")
+                .build();
+        HashMap<String, Object> gptReturn = MockGPTService.getHashTagAndImage(reqWriteDiaryDto.getContext());
+        Diary diary = reqWriteDiaryDto.toDiary();
+        List<String> hashTags = (List<String> )gptReturn.get("hashTags");
+
+        hashTags.stream().forEach(hashTag ->
+                diary.addHashTag(HashTag.builder()
+                        .hashTag(hashTag)
+                        .build())
+        );
+
+        diary.addThumbnailUrl(gptReturn.get("Image").toString());
+
+        diary.addWrittenDiary(WrittenDiary.builder()
+                .memberId(memberSetup.getMemberId())
+                .writtenDate(getNowDate())
+                .build());
+        diaryRepository.save(diary);
     }
 
     @Test
     @DisplayName("다이어리 작성 - saveDiary")
+    @DirtiesContext
     public void saveDiary() {
         //given
         Member writer = memberRepository.findByEmail("lopahn2@gmail.com").get();
@@ -78,7 +114,7 @@ class DiaryServiceImplTest {
         diary.addThumbnailUrl(gptReturn.get("Image").toString());
 
         diary.addWrittenDiary(WrittenDiary.builder()
-                .writerId(writer.getMemberId())
+                .memberId(writer.getMemberId())
                 .writtenDate(getNowDate())
                 .build());
         diaryRepository.save(diary);
@@ -90,7 +126,107 @@ class DiaryServiceImplTest {
                 () -> assertThat(assertDiary.getDiaryId()).isEqualTo(diary.getDiaryId()),
                 () -> assertThat(assertDiary.getContext()).isEqualTo(diary.getContext()),
                 () -> assertThat(assertDiary.getHashTags().get(0).getHashTag()).isEqualTo("one"),
-                () -> assertThat(assertDiary.getWrittenDiary().getWriterId()).isEqualTo(writer.getMemberId())
+                () -> assertThat(assertDiary.getWrittenDiary().getMemberId()).isEqualTo(writer.getMemberId())
+        );
+    }
+
+    @Test
+    @DisplayName("다이어리 섬네일 재생성 - saveDiary")
+    @DirtiesContext
+    public void reMakeThumbnail() {
+        //given
+        Long reqDiaryId = 1L;
+        //when
+        Diary diary = diaryRepository.findById(reqDiaryId).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
+        HashMap<String, Object> gptReturn = MockGPTService.getHashTagAndImage(diary.getContext());
+        diary.addThumbnailUrl("New Image URL in here");
+        //then
+        Assertions.assertAll(
+                () -> assertThat(diary.getThumbnailUrl()).isEqualTo("New Image URL in here")
+        );
+    }
+
+    @Test
+    @DisplayName("다이어리 중복 작성 체크 - avoidCreatingTwice")
+    @DirtiesContext
+    public void checkCreatingTwice() {
+        //given
+        Member member = memberRepository.findById(2L).get();
+        String now = getNowDate();
+        //when
+        String writtenDate = writtenDiaryRepository.findByMemberId(member.getMemberId()).get().getWrittenDate();
+
+        //then
+        if (writtenDate.equals(now)) assertThrows(CustomException.class, () -> { throw new CustomException(StatusCode.FORBIDDEN_CREATING_TWICE); });
+    }
+
+    @Test
+    @DisplayName("다이어리 업데이트 - renewalDiary")
+    @DirtiesContext
+    public void updateDiary() {
+        //given
+        Long diaryId = 1L;
+        ReqUpdateDiaryDto reqUpdateDiaryDto = ReqUpdateDiaryDto.builder()
+                .title("new title")
+                .context("new context")
+                .build();
+        //when
+        if (reqUpdateDiaryDto.getTitle().isEmpty() || reqUpdateDiaryDto.getContext().isEmpty()) assertThrows(CustomException.class, () -> { throw new CustomException(StatusCode.MALFORMED); });
+
+        Diary diary = diaryRepository.findById(diaryId).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
+
+        diary.updateContext(reqUpdateDiaryDto.getContext());
+        diary.updateTitle(reqUpdateDiaryDto.getTitle());
+        //then
+        Assertions.assertAll(
+                () -> assertThat(diary.getTitle()).isEqualTo("new title"),
+                () -> assertThat(diary.getContext()).isEqualTo("new context")
+        );
+    }
+
+    @Test
+    @DisplayName("다이어리 삭제 - eraseDiary")
+    @DirtiesContext
+    @Rollback
+    public void deleteDiary() {
+        //given
+        Long diaryId = 1L;
+        Member member = memberRepository.findById(2L).get();
+        //when
+        Diary diary = diaryRepository.findById(diaryId).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
+        Long hostId = writtenDiaryRepository.findByDiary(diary).get().getWrittenDiaryId();
+
+        if (member.getMemberId() != hostId) assertThrows(CustomException.class, () -> { throw new CustomException(StatusCode.FORBIDDEN); });
+
+        diaryRepository.delete(diary);
+
+        // 다이어리 삭제 후 데이터베이스에서 확인
+        Optional<Diary> deletedDiary = diaryRepository.findById(diaryId);
+        //then
+        Assertions.assertAll(
+                () -> assertTrue(deletedDiary.isEmpty())
+        );
+    }
+
+    @Test
+    @DisplayName("다이어리 목록 [ 비공개 ] - readDiary")
+    public void getDiary() {
+        //given
+        Member member = memberRepository.findById(2L).get();
+        //when
+        List<ResDiaryListDto> diaries = writtenDiaryRepository.findAllByMemberId(member.getMemberId())
+                .stream().map(writtenDiary -> ResDiaryListDto.builder()
+                        .title(writtenDiary.getDiary().getTitle())
+                        .context(writtenDiary.getDiary().getContext())
+                        .location(writtenDiary.getDiary().getLocation())
+                        .weatherCode(writtenDiary.getDiary().getWeatherCode())
+                        .thumbnailUrl(writtenDiary.getDiary().getThumbnailUrl())
+                        .hashTagList(writtenDiary.getDiary().getHashTags())
+                        .build()).collect(Collectors.toList());
+        //then
+        Assertions.assertAll(
+                () -> assertThat(diaries.size()).isEqualTo(1),
+                () -> assertThat(diaries.get(0).getTitle()).isEqualTo("mockup diary")
         );
     }
 

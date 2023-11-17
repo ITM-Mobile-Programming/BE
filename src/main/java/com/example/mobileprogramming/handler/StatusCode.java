@@ -13,6 +13,7 @@ public enum StatusCode {
     INVALID_PASSWORD (400, "비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
     PASSWORD_NOT_FOUND (400, "비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
     FORBIDDEN(403, "해당 요청에 대한 권한이 없습니다.", HttpStatus.FORBIDDEN),
+    FORBIDDEN_CREATING_TWICE(403, "하루 하나의 다이어리만 작성가능합니다.", HttpStatus.FORBIDDEN),
     UNAUTHORIZED (400, "로그인 후 이용가능합니다.", HttpStatus.UNAUTHORIZED),
     EXPIRED_JWT(400, "기존 토큰이 만료되었습니다. 해당 토큰을 가지고 /token/refresh 링크로 이동 후 토큰을 재발급 받으세요.", HttpStatus.UNAUTHORIZED),
     RE_LOGIN(400, "모든 토큰이 만료되었습니다. 다시 로그인해주세요.", HttpStatus.UNAUTHORIZED),
