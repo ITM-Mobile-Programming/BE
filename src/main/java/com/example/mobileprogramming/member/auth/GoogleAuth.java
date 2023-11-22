@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
@@ -30,8 +31,10 @@ public class GoogleAuth {
                     .email(googleAuthDto.getEmail())
                     .password(googleAuthDto.getSub())
                     .build();
-        } catch (Error ce) {
-            ce.printStackTrace();
+        } catch (HttpClientErrorException.BadRequest e) {
+            String responseBody = e.getResponseBodyAsString();
+            System.out.println("Bad Request Response Body: " + responseBody);
+
             throw new CustomException(StatusCode.DISABLED_OAUTH_TOKEN);
         }
     }
