@@ -31,7 +31,7 @@ public class GoogleAuth {
                     .email(googleAuthDto.getEmail())
                     .password(googleAuthDto.getSub())
                     .build();
-        } catch (HttpClientErrorException.BadRequest e) {
+        } catch (HttpClientErrorException e) {
             String responseBody = e.getResponseBodyAsString();
             System.out.println("Bad Request Response Body: " + responseBody);
 
