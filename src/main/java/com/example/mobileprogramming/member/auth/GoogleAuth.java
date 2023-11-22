@@ -1,5 +1,7 @@
 package com.example.mobileprogramming.member.auth;
 
+import com.example.mobileprogramming.handler.CustomException;
+import com.example.mobileprogramming.handler.StatusCode;
 import com.example.mobileprogramming.member.dto.GoogleAuthDto;
 import com.example.mobileprogramming.member.dto.ResOAuthDto;
 import lombok.NoArgsConstructor;
@@ -19,13 +21,18 @@ public class GoogleAuth {
 
     public static final String ACCESS_TOKEN = "access_token";
     public ResOAuthDto getGoogleMemberInfo(String accessToken) {
-        Map<String, String> token = new HashMap<>();
-        token.put(ACCESS_TOKEN, accessToken);
-        GoogleAuthDto googleAuthDto = restTemplate.postForEntity(USERINFO_URL, token, GoogleAuthDto.class).getBody();
+        try {
+            Map<String, String> token = new HashMap<>();
+            token.put(ACCESS_TOKEN, accessToken);
+            GoogleAuthDto googleAuthDto = restTemplate.postForEntity(USERINFO_URL, token, GoogleAuthDto.class).getBody();
 
-        return ResOAuthDto.builder()
-                .email(googleAuthDto.getEmail())
-                .password(googleAuthDto.getSub())
-                .build();
+            return ResOAuthDto.builder()
+                    .email(googleAuthDto.getEmail())
+                    .password(googleAuthDto.getSub())
+                    .build();
+        } catch (CustomException ce) {
+            ce.printStackTrace();
+            throw new CustomException(StatusCode.DISABLED_OAUTH_TOKEN);
+        }
     }
 }
