@@ -30,7 +30,7 @@ public class GoogleAuth {
                     .email(googleAuthDto.getEmail())
                     .password(googleAuthDto.getSub())
                     .build();
-        } catch (CustomException ce) {
+        } catch (Error ce) {
             ce.printStackTrace();
             throw new CustomException(StatusCode.DISABLED_OAUTH_TOKEN);
         }
