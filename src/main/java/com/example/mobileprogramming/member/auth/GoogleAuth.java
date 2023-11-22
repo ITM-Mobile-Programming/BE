@@ -23,6 +23,8 @@ public class GoogleAuth {
     public static final String ACCESS_TOKEN = "access_token";
     public ResOAuthDto getGoogleMemberInfo(String accessToken) {
         try {
+            System.out.println("AccessTokenValue");
+            System.out.println(accessToken);
             Map<String, String> token = new HashMap<>();
             token.put(ACCESS_TOKEN, accessToken);
             GoogleAuthDto googleAuthDto = restTemplate.postForEntity(USERINFO_URL, token, GoogleAuthDto.class).getBody();
