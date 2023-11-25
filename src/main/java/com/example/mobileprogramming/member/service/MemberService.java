@@ -11,9 +11,10 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 
 public interface MemberService {
-    void saveMember(ReqSignUpDto reqSignUpDto);
+    HashMap saveMember(ReqSignUpDto reqSignUpDto);
 
     Message checkMemberStatus(String accessToken);
 

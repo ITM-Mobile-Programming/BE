@@ -31,6 +31,7 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -59,13 +60,19 @@ public class MemberServiceImpl implements MemberService{
 
     @Override
     @Transactional
-    public void saveMember(ReqSignUpDto reqSignUpDto) {
+    public HashMap saveMember(ReqSignUpDto reqSignUpDto) {
         memberRepository.findByEmail(reqSignUpDto.getEmail()).ifPresent(member -> { throw new CustomException(StatusCode.REGISTERED_EMAIL); });
 
         reqSignUpDto.appendDtoCode(generateSHA256Hash(reqSignUpDto.getEmail()));
         reqSignUpDto.encodePassword(passwordEncoder);
 
         memberRepository.save(reqSignUpDto.toMember());
+        HashMap<String, Long> memberId = new HashMap<>();
+        memberId.put("memberId", memberRepository.findByEmail(reqSignUpDto.getEmail()).orElseThrow(() -> {
+            throw new CustomException(StatusCode.NOT_FOUND);
+        }).getMemberId());
+
+        return memberId;
     }
 
     @Override
