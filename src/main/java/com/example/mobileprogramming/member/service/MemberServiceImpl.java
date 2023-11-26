@@ -125,12 +125,8 @@ public class MemberServiceImpl implements MemberService{
 
     @Override
     public void devDeleteMember(String email) {
-        try {
+            memberRepository.findByEmail(email).orElseThrow(() -> {throw new CustomException(StatusCode.NOT_FOUND);});
             memberRepository.deleteByEmail(email);
-        } catch (Exception e) {
-            throw new CustomException(StatusCode.NOT_FOUND);
-        }
-
     }
 
     private String generateSHA256Hash(String input) {
