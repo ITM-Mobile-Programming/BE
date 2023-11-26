@@ -124,6 +124,7 @@ public class MemberServiceImpl implements MemberService{
     }
 
     @Override
+    @Transactional
     public void devDeleteMember(String email) {
             memberRepository.findByEmail(email).orElseThrow(() -> {throw new CustomException(StatusCode.NOT_FOUND);});
             memberRepository.deleteByEmail(email);
