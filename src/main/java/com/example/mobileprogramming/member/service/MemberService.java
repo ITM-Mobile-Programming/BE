@@ -25,4 +25,6 @@ public interface MemberService {
     ResMemberInfoDto getMemberInfo(AuthorizerDto authorizerDto);
 
     void updateMemberInfo(ReqUpdateProfileDto reqUpdateProfileDto, AuthorizerDto authorizerDto);
+
+    void devDeleteMember(String email);
 }

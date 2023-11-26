@@ -38,4 +38,10 @@ public class MemberController {
     public ResponseEntity<Message> oAuthSignUp(@RequestBody ReqSignUpDto reqSignUpDto) {
         return ResponseEntity.ok(new Message(StatusCode.OK,memberService.saveMember(reqSignUpDto)));
     }
+
+    @PostMapping(value = "/dev/delete")
+    public ResponseEntity<Message> devDeleteUser(@RequestBody HashMap<String, String> emailDto) {
+        memberService.devDeleteMember(emailDto.get("email"));
+        return ResponseEntity.ok(new Message(StatusCode.OK));
+    }
 }

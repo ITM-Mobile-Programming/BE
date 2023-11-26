@@ -123,6 +123,16 @@ public class MemberServiceImpl implements MemberService{
         member.updateIntroduce(reqUpdateProfileDto.getIntroduce());
     }
 
+    @Override
+    public void devDeleteMember(String email) {
+        try {
+            memberRepository.deleteByEmail(email);
+        } catch (Exception e) {
+            throw new CustomException(StatusCode.NOT_FOUND);
+        }
+
+    }
+
     private String generateSHA256Hash(String input) {
         try {
             // Create SHA-256 Hash
