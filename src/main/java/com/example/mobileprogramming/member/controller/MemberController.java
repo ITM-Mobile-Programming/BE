@@ -36,7 +36,6 @@ public class MemberController {
     }
     @PostMapping(value = "/oAuth/signUp")
     public ResponseEntity<Message> oAuthSignUp(@RequestBody ReqSignUpDto reqSignUpDto) {
-        memberService.saveMember(reqSignUpDto);
-        return ResponseEntity.ok(new Message(StatusCode.OK));
+        return ResponseEntity.ok(new Message(StatusCode.OK,memberService.saveMember(reqSignUpDto)));
     }
 }
