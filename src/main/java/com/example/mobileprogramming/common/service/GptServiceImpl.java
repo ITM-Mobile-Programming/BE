@@ -91,7 +91,7 @@ public class GptServiceImpl implements GptService{
         List<Object> messages = new ArrayList<>();
         HashMap<String, String> systemRole = new HashMap<>();
         systemRole.put("role", "system");
-        systemRole.put("content", "You must respond in Korean, and you will summarize the user's input into three Korean words as hashtags. The hashtags should be nouns and highly relevant to the user's statement.");
+        systemRole.put("content", "You must respond in Korean, and you will summarize the user's input into three Korean words as hashtags. The hashtags should be nouns and highly relevant to the user's statement. Hashtags must start with # and must not have line breaks or spaces.");
         messages.add(systemRole);
 
         HashMap<String, String> userRole = new HashMap<>();
