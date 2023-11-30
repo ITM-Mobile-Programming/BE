@@ -38,8 +38,16 @@ public class GptServiceImpl implements GptService{
 
             HashMap<String, Object> responseBody = objectMapper.readValue(responseEntity.getBody(), HashMap.class);
             String hashTagStrings = ((HashMap) ((HashMap) ((List) responseBody.get("choices")).get(0)).get("message")).get("content").toString();
+            String[] hashTagArray = hashTagStrings.split(" ");
+            List<String> hashTagList = new ArrayList<>();
 
-            return Arrays.asList(hashTagStrings.split(" "));
+            for (String hashTag : hashTagArray) {
+                if (!hashTag.isEmpty()) {
+                    hashTagList.add(hashTag);
+                }
+            }
+
+            return hashTagList;
         } catch (ResourceAccessException resourceAccessException) {
             // Log the timeout exception
             System.out.println("Timeout error: " + resourceAccessException.getMessage());
