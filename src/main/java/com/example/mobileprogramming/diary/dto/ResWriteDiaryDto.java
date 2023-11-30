@@ -9,11 +9,13 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class ResWriteDiaryDto {
+    private Long diaryId;
     private List<String> hashTags;
     private String imageUrl;
 
     @Builder
-    public ResWriteDiaryDto(List<String> hashTags, String imageUrl) {
+    public ResWriteDiaryDto(Long diaryId, List<String> hashTags, String imageUrl) {
+        this.diaryId = diaryId;
         this.hashTags = hashTags;
         this.imageUrl = imageUrl;
     }

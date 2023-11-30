@@ -2,10 +2,10 @@ package com.example.mobileprogramming.diary.controller;
 
 import com.example.mobileprogramming.common.dto.Message;
 import com.example.mobileprogramming.diary.dto.ReqUpdateDiaryDto;
+import com.example.mobileprogramming.diary.dto.ReqUpdateMbtiDto;
 import com.example.mobileprogramming.diary.dto.ReqWriteDiaryDto;
 import com.example.mobileprogramming.diary.service.DiaryService;
 import com.example.mobileprogramming.handler.StatusCode;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +33,13 @@ public class DiaryController {
     @PostMapping(value = "/update")
     public ResponseEntity<Message> renewalDiary(@RequestBody ReqUpdateDiaryDto reqUpdateDiaryDto) {
         diaryService.updateDiary(reqUpdateDiaryDto);
+        return ResponseEntity.ok(new Message(StatusCode.OK));
+    }
+
+    @PostMapping(value = "/update/mbti")
+    public ResponseEntity<Message> appendMbtiCode(@RequestBody ReqUpdateMbtiDto reqUpdateMbtiDto) {
+
+        diaryService.updateMbtiCode(getPODAuthorizer(), reqUpdateMbtiDto.getDiaryId(), reqUpdateMbtiDto.getMbtiCode());
         return ResponseEntity.ok(new Message(StatusCode.OK));
     }
 

@@ -50,15 +50,27 @@ public class DiaryServiceImpl implements DiaryService {
         diaryRepository.save(diary);
 
         return ResWriteDiaryDto.builder()
+                .diaryId(diary.getDiaryId())
                 .hashTags(hashTags)
                 .imageUrl(imgUrl)
                 .build();
     }
 
     @Override
+    public void updateMbtiCode(AuthorizerDto authorizerDto, Long diaryId, String mbtiCode) {
+        Long memberId = authorizerDto.getMemberId();
+        Diary noMbtiDiary = diaryRepository.findById(diaryId).orElseThrow(() -> {
+            throw new CustomException(StatusCode.NOT_FOUND);
+        });
+
+        if (memberId != writtenDiaryRepository.findByDiary(noMbtiDiary).orElseThrow(() -> {throw new CustomException(StatusCode.NOT_FOUND);}).getMemberId())
+            throw new CustomException(StatusCode.FORBIDDEN);
+        noMbtiDiary.updateMbti(mbtiCode);
+    }
+
+    @Override
     @Transactional
     public ResWriteDiaryDto updateThumbnail(Long diaryId) {
-        System.out.println(diaryId);
         Diary diary = diaryRepository.findById(diaryId).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
         List<String> hashTagString = diary.getHashTags().stream().map(hashTag -> hashTag.toString()).collect(Collectors.toList());
 

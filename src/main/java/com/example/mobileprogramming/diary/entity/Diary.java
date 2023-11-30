@@ -80,4 +80,7 @@ public class Diary extends BaseTimeEntity {
     public void updateContext(String context) {
         this.context = context;
     }
+    public void updateMbti(String mbtiCode) {
+        this.mbtiCode = mbtiCode;
+    }
 }

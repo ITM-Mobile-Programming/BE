@@ -63,7 +63,6 @@ class DiaryServiceImplTest {
                 .context("mockup diary")
                 .location("강서구 화곡동")
                 .weatherCode("BAD")
-                .mbtiCode("INTJ")
                 .build();
         HashMap<String, Object> gptReturn = MockGPTService.getHashTagAndImage(reqWriteDiaryDto.getContext());
         Diary diary = reqWriteDiaryDto.toDiary();
@@ -95,7 +94,6 @@ class DiaryServiceImplTest {
                 .context("mockup diary text")
                 .location("강서구 화곡동")
                 .weatherCode("BAD")
-                .mbtiCode("INTJ")
                 .build();
         //when
         HashMap<String, Object> gptReturn = MockGPTService.getHashTagAndImage(reqWriteDiaryDto.getContext());
@@ -128,6 +126,28 @@ class DiaryServiceImplTest {
                 () -> assertThat(assertDiary.getHashTags().get(0).getHashTag()).isEqualTo("one"),
                 () -> assertThat(assertDiary.getWrittenDiary().getMemberId()).isEqualTo(writer.getMemberId())
         );
+    }
+
+    @Test
+    @DisplayName("다이어리 MBIT 업데이트 - updateMbti")
+    @DirtiesContext
+    public void updateMbti() {
+        //given
+        Member writer = memberRepository.findByEmail("lopahn2@gmail.com").get();
+        Long diaryId = 1L;
+        //when
+        Diary noMbtiDiary = diaryRepository.findById(diaryId).get();
+        if (writer.getMemberId() != writtenDiaryRepository.findByDiary(noMbtiDiary).orElseThrow(() -> {throw new CustomException(StatusCode.NOT_FOUND);}).getMemberId())
+            assertThrows(CustomException.class, () -> { throw new CustomException(StatusCode.FORBIDDEN); });
+        String mbti = "INTJ";
+        noMbtiDiary.updateMbti(mbti);
+
+        Diary assertDiary = diaryRepository.findById(diaryId).get();
+        //then
+        Assertions.assertAll(
+                () -> assertThat(assertDiary.getMbtiCode()).isEqualTo("INTJ")
+        );
+
     }
 
     @Test

@@ -12,15 +12,15 @@ public class ReqWriteDiaryDto {
     private String context;
     private String location;
     private String weatherCode;
-    private String mbtiCode;
+//    private String mbtiCode;
 
     @Builder
-    public ReqWriteDiaryDto(String title, String context, String location, String weatherCode, String mbtiCode) {
+    public ReqWriteDiaryDto(String title, String context, String location, String weatherCode) {
         this.title = title;
         this.context = context;
         this.location = location;
         this.weatherCode = weatherCode;
-        this.mbtiCode = mbtiCode;
+//        this.mbtiCode = mbtiCode;
     }
 
     public Diary toDiary() {
@@ -29,7 +29,7 @@ public class ReqWriteDiaryDto {
                 .context(this.context)
                 .location(this.location)
                 .weatherCode(this.weatherCode)
-                .mbtiCode(this.mbtiCode)
+//                .mbtiCode(this.mbtiCode)
                 .build();
     }
 }
