@@ -10,6 +10,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class ResDiaryListDto {
+    private Long diaryId;
     private String title;
     private String context;
     private String location;
@@ -18,7 +19,9 @@ public class ResDiaryListDto {
     private List<HashTag> hashTagList;
 
     @Builder
-    public ResDiaryListDto(String title, String context, String location, String weatherCode, String thumbnailUrl, List<HashTag> hashTagList) {
+
+    public ResDiaryListDto(Long diaryId, String title, String context, String location, String weatherCode, String thumbnailUrl, List<HashTag> hashTagList) {
+        this.diaryId = diaryId;
         this.title = title;
         this.context = context;
         this.location = location;

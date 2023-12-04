@@ -114,6 +114,7 @@ public class DiaryServiceImpl implements DiaryService {
 
         return writtenDiaryRepository.findAllByMemberId(authorizerDto.getMemberId())
                 .stream().map(writtenDiary -> ResDiaryListDto.builder()
+                        .diaryId(writtenDiary.getDiary().getDiaryId())
                         .title(writtenDiary.getDiary().getTitle())
                         .context(writtenDiary.getDiary().getContext())
                         .location(writtenDiary.getDiary().getLocation())
