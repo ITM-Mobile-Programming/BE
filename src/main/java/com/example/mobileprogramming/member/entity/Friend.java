@@ -3,6 +3,7 @@ package com.example.mobileprogramming.member.entity;
 import com.example.mobileprogramming.baseTime.BaseTimeEntity;
 import com.example.mobileprogramming.diary.entity.Diary;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,4 +30,17 @@ public class Friend extends BaseTimeEntity {
     @JoinColumn(name = "friend_id")
     @JsonBackReference
     private Member friend;
+
+    @Builder
+    public Friend(Boolean isAccepted) {
+        this.isAccepted = isAccepted;
+    }
+
+    public void addMember(Member member) {
+        this.member = member;
+    }
+
+    public void addFriend(Member friend) {
+        this.friend = friend;
+    }
 }

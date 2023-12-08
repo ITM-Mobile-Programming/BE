@@ -6,8 +6,10 @@ import com.example.mobileprogramming.handler.CustomException;
 import com.example.mobileprogramming.handler.StatusCode;
 import com.example.mobileprogramming.member.dto.ReqUpdateProfileDto;
 import com.example.mobileprogramming.member.dto.ResMemberInfoDto;
+import com.example.mobileprogramming.member.entity.Friend;
 import com.example.mobileprogramming.member.entity.Member;
 import com.example.mobileprogramming.member.mockEntity.MockMember;
+import com.example.mobileprogramming.member.repository.FriendRepository;
 import com.example.mobileprogramming.member.repository.MemberRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -33,8 +35,8 @@ class MemberServiceImplTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired
     private WrittenDiaryRepository writtenDiaryRepository;
-
-
+    @Autowired
+    FriendRepository friendRepository;
 
 
     @Test
@@ -80,6 +82,33 @@ class MemberServiceImplTest {
         Assertions.assertAll(
                 () -> assertThat(member.getNickName()).isEqualTo("update nick name"),
                 () -> assertThat(member.getIntroduce()).isEqualTo("update introduce")
+        );
+    }
+
+    @Test
+    @DisplayName("친구 추가 요청 - addFriend")
+    @DirtiesContext
+    public void createFriendRequest() {
+        //given
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser", "lopahn5@gmail.com"));
+        Member sender = memberRepository.findById(1L).get();
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser2", "lopahn10@gmail.com"));
+        Member receiver = memberRepository.findById(2L).get();
+        String friendCode = receiver.getCode();
+        //when
+        Member appendedFriend = memberRepository.findByCode(friendCode).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
+
+        Friend friendShip = Friend.builder().isAccepted(false).build();
+        friendShip.addMember(sender);
+        friendShip.addFriend(appendedFriend);
+
+        sender.getFriends().add(friendShip);
+        friendRepository.save(friendShip);
+        //then
+        Friend assertFriend = friendRepository.findByMember(sender).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
+        Assertions.assertAll(
+                () -> assertThat(assertFriend.getIsAccepted()).isEqualTo(false),
+                () -> assertThat(assertFriend.getFriend().getMemberId()).isEqualTo(2L)
         );
     }
 

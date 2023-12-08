@@ -57,6 +57,7 @@ public class DiaryServiceImpl implements DiaryService {
     }
 
     @Override
+    @Transactional
     public void updateMbtiCode(AuthorizerDto authorizerDto, Long diaryId, String mbtiCode) {
         Long memberId = authorizerDto.getMemberId();
         Diary noMbtiDiary = diaryRepository.findById(diaryId).orElseThrow(() -> {
