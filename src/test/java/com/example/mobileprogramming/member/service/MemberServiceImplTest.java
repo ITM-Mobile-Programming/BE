@@ -6,6 +6,7 @@ import com.example.mobileprogramming.handler.CustomException;
 import com.example.mobileprogramming.handler.StatusCode;
 import com.example.mobileprogramming.member.dto.ReqUpdateProfileDto;
 import com.example.mobileprogramming.member.dto.ResMemberInfoDto;
+import com.example.mobileprogramming.member.dto.ResFriendListDto;
 import com.example.mobileprogramming.member.entity.Friend;
 import com.example.mobileprogramming.member.entity.Member;
 import com.example.mobileprogramming.member.mockEntity.MockMember;
@@ -20,9 +21,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -86,7 +90,7 @@ class MemberServiceImplTest {
     }
 
     @Test
-    @DisplayName("친구 추가 요청 - addFriend")
+    @DisplayName("친구 추가 - addFriend")
     @DirtiesContext
     public void createFriendRequest() {
         //given
@@ -98,18 +102,188 @@ class MemberServiceImplTest {
         //when
         Member appendedFriend = memberRepository.findByCode(friendCode).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
 
-        Friend friendShip = Friend.builder().isAccepted(false).build();
+        Friend friendShip = Friend.builder().isAccepted(true).build();
         friendShip.addMember(sender);
         friendShip.addFriend(appendedFriend);
 
         sender.getFriends().add(friendShip);
         friendRepository.save(friendShip);
+
+
+        Friend receiveFriendShip = Friend.builder().isAccepted(true).build();
+        receiveFriendShip.addMember(receiver);
+        receiveFriendShip.addFriend(sender);
+        receiver.getFriends().add(receiveFriendShip);
+        friendRepository.save(receiveFriendShip);
         //then
         Friend assertFriend = friendRepository.findByMember(sender).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
         Assertions.assertAll(
-                () -> assertThat(assertFriend.getIsAccepted()).isEqualTo(false),
-                () -> assertThat(assertFriend.getFriend().getMemberId()).isEqualTo(2L)
+                () -> assertThat(assertFriend.getIsAccepted()).isEqualTo(true)
         );
+    }
+
+    @Test
+    @DisplayName("친구 추가 승인 대기 목록 - requestedFriendList")
+    @DirtiesContext
+    public void getRequestFriendList() {
+        //given
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser", "lopahn5@gmail.com"));
+        Member sender = memberRepository.findById(1L).get();
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser2", "lopahn10@gmail.com"));
+        Member receiver = memberRepository.findById(2L).get();
+        Friend friendShip = Friend.builder().isAccepted(false).build();
+        friendShip.addMember(sender);
+        friendShip.addFriend(receiver);
+        sender.getFriends().add(friendShip);
+        friendRepository.save(friendShip);
+
+        //when
+        List<ResFriendListDto> resRequestedFriendList = friendRepository.findByMemberAndIsAccepted(sender, false)
+                .stream()
+                .map(friend -> ResFriendListDto.builder()
+                        .friendId(friend.getId())
+                        .memberId(friend.getFriend().getMemberId())
+                        .nickName(friend.getFriend().getNickName())
+                        .profileUrl(friend.getFriend().getProfileUrl())
+                        .build())
+                .collect(Collectors.toList());
+        //then
+        Assertions.assertAll(
+                () -> assertThat(resRequestedFriendList.size()).isEqualTo(1),
+                () -> assertThat(resRequestedFriendList.get(0).getClass()).isEqualTo(ResFriendListDto.class)
+        );
+    }
+
+    @Test
+    @DisplayName("친구 추가 승인 요청 목록 - notYetAcceptedRequestedFriend")
+    @DirtiesContext
+    public void getAcceptedFalseFriendList() {
+        //given
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser", "lopahn5@gmail.com"));
+        Member sender = memberRepository.findById(1L).get();
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser2", "lopahn10@gmail.com"));
+        Member receiver = memberRepository.findById(2L).get();
+        Friend friendShip = Friend.builder().isAccepted(false).build();
+        friendShip.addMember(sender);
+        friendShip.addFriend(receiver);
+        sender.getFriends().add(friendShip);
+        friendRepository.save(friendShip);
+        //when
+        List<ResFriendListDto> resRequestedFriendList = friendRepository.findByFriendAndIsAccepted(receiver, false)
+                .stream()
+                .map(friend -> ResFriendListDto.builder()
+                        .friendId(friend.getId())
+                        .memberId(friend.getFriend().getMemberId())
+                        .nickName(friend.getFriend().getNickName())
+                        .profileUrl(friend.getFriend().getProfileUrl())
+                        .build())
+                .collect(Collectors.toList());
+        //then
+        Assertions.assertAll(
+                () -> assertThat(resRequestedFriendList.size()).isEqualTo(1),
+                () -> assertThat(resRequestedFriendList.get(0).getClass()).isEqualTo(ResFriendListDto.class)
+        );
+    }
+
+    @Test
+    @DisplayName("친구 추가 승인 - acceptFriendRequest")
+    @DirtiesContext
+    public void appendFriend() {
+        //given
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser", "lopahn5@gmail.com"));
+        Member sender = memberRepository.findById(1L).get();
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser2", "lopahn10@gmail.com"));
+        Member receiver = memberRepository.findById(2L).get();
+        Friend friendShip = Friend.builder().isAccepted(false).build();
+        friendShip.addMember(sender);
+        friendShip.addFriend(receiver);
+        sender.getFriends().add(friendShip);
+        friendRepository.save(friendShip);
+        //when
+        Friend friend = friendRepository.findByMember(sender).orElseThrow(() -> {throw new CustomException(StatusCode.NOT_FOUND);});
+        friend.updateAcceptedStatus();
+
+        Friend receiveFriendShip = Friend.builder().isAccepted(true).build();
+        receiveFriendShip.addMember(receiver);
+        receiveFriendShip.addFriend(sender);
+
+        friendRepository.save(receiveFriendShip);
+        //then
+        Friend assertFriend = friendRepository.findByMember(sender).get();
+        Assertions.assertAll(
+                () -> assertThat(assertFriend.getIsAccepted()).isEqualTo(true)
+        );
+
+    }
+
+    @Test
+    @DisplayName("친구 목록 - requestFriendList")
+    @DirtiesContext
+    public void getFriendList() {
+        //given
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser", "lopahn5@gmail.com"));
+        Member sender = memberRepository.findById(1L).get();
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser2", "lopahn10@gmail.com"));
+        Member receiver = memberRepository.findById(2L).get();
+        Friend friendShip = Friend.builder().isAccepted(true).build();
+        friendShip.addMember(sender);
+        friendShip.addFriend(receiver);
+        sender.getFriends().add(friendShip);
+        friendRepository.save(friendShip);
+        //when
+        List<ResFriendListDto> resRequestedFriendList = friendRepository.findByFriendAndIsAccepted(sender, true)
+                .stream()
+                .map(friend -> ResFriendListDto.builder()
+                        .friendId(friend.getId())
+                        .memberId(friend.getFriend().getMemberId())
+                        .nickName(friend.getFriend().getNickName())
+                        .profileUrl(friend.getFriend().getProfileUrl())
+                        .build())
+                .collect(Collectors.toList());
+        //then
+        Friend assertFriend = friendRepository.findByMember(sender).get();
+        Assertions.assertAll(
+                () -> assertThat(assertFriend.getIsAccepted()).isEqualTo(true)
+        );
+
+    }
+
+    @Test
+    @DisplayName("친구 삭제 - dropFriendRelationship")
+    @DirtiesContext
+    public void deleteFriend() {
+        //given
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser", "lopahn5@gmail.com"));
+        Member sender = memberRepository.findById(1L).get();
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser2", "lopahn10@gmail.com"));
+        Member receiver = memberRepository.findById(2L).get();
+
+        Friend friendShip = Friend.builder().isAccepted(true).build();
+        friendShip.addMember(sender);
+        friendShip.addFriend(receiver);
+        sender.getFriends().add(friendShip);
+        friendRepository.save(friendShip);
+
+        Friend receiveFriendShip = Friend.builder().isAccepted(true).build();
+        receiveFriendShip.addMember(receiver);
+        receiveFriendShip.addFriend(sender);
+        receiver.getFriends().add(receiveFriendShip);
+        friendRepository.save(receiveFriendShip);
+        //when
+        Friend senderFriendShip = friendRepository.findByMember(sender).orElseThrow(() -> {throw new CustomException(StatusCode.NOT_FOUND);});
+        Friend receiverFriendShip = friendRepository.findByMember(senderFriendShip.getFriend()).orElseThrow(() -> {throw new CustomException(StatusCode.NOT_FOUND);});
+
+        sender.getFriends().remove(senderFriendShip);
+        receiver.getFriends().remove(receiverFriendShip);
+
+        friendRepository.delete(senderFriendShip);
+        friendRepository.delete(receiverFriendShip);
+        //then
+        Assertions.assertAll(
+                () -> assertThat(sender.getFriends().size()).isEqualTo(0),
+                () -> assertThat(receiver.getFriends().size()).isEqualTo(0)
+        );
+
     }
 
 

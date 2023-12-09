@@ -43,4 +43,6 @@ public class Friend extends BaseTimeEntity {
     public void addFriend(Member friend) {
         this.friend = friend;
     }
+    public void updateAcceptedStatus() {
+        this.isAccepted = true; }
 }
