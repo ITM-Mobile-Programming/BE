@@ -13,4 +13,6 @@ public interface FriendService {
 //    void appendFriend(Long senderMemberId);
 
     void deleteFriend(Long friendShipId);
+
+    boolean isFriend(String code, AuthorizerDto authorizerDto);
 }

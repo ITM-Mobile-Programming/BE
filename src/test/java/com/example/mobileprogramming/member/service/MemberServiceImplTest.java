@@ -249,6 +249,31 @@ class MemberServiceImplTest {
     }
 
     @Test
+    @DisplayName("친구 여부 확인 - checkFriendOrNot")
+    @DirtiesContext
+    public void isFriend() {
+        //given
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser", "lopahn5@gmail.com"));
+        Member sender = memberRepository.findById(1L).get();
+        memberRepository.save(MockMember.getMockMemberInfo("mockUser2", "lopahn10@gmail.com"));
+        Member receiver = memberRepository.findById(2L).get();
+        Friend friendShip = Friend.builder().isAccepted(true).build();
+        friendShip.addMember(sender);
+        friendShip.addFriend(receiver);
+        sender.getFriends().add(friendShip);
+        friendRepository.save(friendShip);
+        //when
+        String code = sender.getCode();
+        Member testSender = memberRepository.findByCode(code).orElseThrow(() -> {throw new CustomException(StatusCode.NOT_FOUND);});
+        Boolean isFriend = friendRepository.existsByFriendAndMember(testSender,receiver);
+        //then
+        Assertions.assertAll(
+                () -> assertThat(isFriend).isEqualTo(false)
+        );
+
+    }
+
+    @Test
     @DisplayName("친구 삭제 - dropFriendRelationship")
     @DirtiesContext
     public void deleteFriend() {

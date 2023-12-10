@@ -112,4 +112,12 @@ public class FriendServiceImpl implements FriendService {
         friendRepository.delete(senderFriendShip);
         friendRepository.delete(receiverFriendShip);
     }
+
+    @Override
+    public boolean isFriend(String code, AuthorizerDto authorizerDto) {
+        Member sender = memberRepository.findByCode(code).orElseThrow(() -> {throw new CustomException(StatusCode.NOT_FOUND);});
+        Member receiver = memberRepository.findById(authorizerDto.getMemberId()).orElseThrow(() -> {throw new CustomException(StatusCode.NOT_FOUND);});
+        Boolean isFriend = friendRepository.existsByFriendAndMember(sender, receiver);
+        return isFriend;
+    }
 }

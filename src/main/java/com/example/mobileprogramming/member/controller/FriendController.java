@@ -47,4 +47,9 @@ public class FriendController {
         return ResponseEntity.ok(new Message(StatusCode.OK));
     }
 
+    @PostMapping(value = "/check")
+    public ResponseEntity<Message> checkFriendOrNot(@RequestBody HashMap<String, String> codeHash) {
+        return ResponseEntity.ok(new Message(StatusCode.OK,friendService.isFriend(codeHash.get("code"), getPODAuthorizer())));
+    }
+
 }
