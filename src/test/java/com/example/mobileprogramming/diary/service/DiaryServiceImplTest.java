@@ -5,6 +5,7 @@ import com.example.mobileprogramming.diary.dto.ReqUpdateDiaryDto;
 import com.example.mobileprogramming.diary.dto.ReqWriteDiaryDto;
 import com.example.mobileprogramming.diary.dto.ResDiaryListDto;
 import com.example.mobileprogramming.diary.entity.Diary;
+import com.example.mobileprogramming.diary.entity.DiaryToFriend;
 import com.example.mobileprogramming.diary.entity.HashTag;
 import com.example.mobileprogramming.diary.entity.WrittenDiary;
 import com.example.mobileprogramming.diary.mockService.MockGPTService;
@@ -30,10 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,6 +79,27 @@ class DiaryServiceImplTest {
                 .writtenDate(getNowDate())
                 .build());
         diaryRepository.save(diary);
+    }
+
+    @Test
+    @DisplayName("날짜에 따른 다이어리 불러오기 - dailyDiary")
+    @DirtiesContext
+    public void getDateDiary() {
+        //given
+        Member writer = memberRepository.findByEmail("lopahn5@gmail.com").get();
+        //when
+        WrittenDiary writtenDiary = writtenDiaryRepository.findByMemberIdAndWrittenDate(2L,"2023년12월16일").get();
+        ResDiaryListDto resDiaryListDto = ResDiaryListDto.builder()
+                .title(writtenDiary.getDiary().getTitle())
+                .context(writtenDiary.getDiary().getContext())
+                .location(writtenDiary.getDiary().getLocation())
+                .weatherCode(writtenDiary.getDiary().getWeatherCode())
+                .hashTagList(writtenDiary.getDiary().getHashTags())
+                .build();
+        //then
+        Assertions.assertAll(
+                () -> assertThat(writtenDiary.getWrittenDate()).isEqualTo("2023년12월16일")
+        );
     }
 
     @Test
@@ -174,7 +193,7 @@ class DiaryServiceImplTest {
         Member member = memberRepository.findById(2L).get();
         String now = getNowDate();
         //when
-        String writtenDate = writtenDiaryRepository.findByMemberId(member.getMemberId()).get().getWrittenDate();
+        String writtenDate = writtenDiaryRepository.findTopByMemberIdOrderByCreatedDateDesc(member.getMemberId()).get().getWrittenDate();
 
         //then
         if (writtenDate.equals(now)) assertThrows(CustomException.class, () -> { throw new CustomException(StatusCode.FORBIDDEN_CREATING_TWICE); });
@@ -235,7 +254,9 @@ class DiaryServiceImplTest {
         Member member = memberRepository.findById(2L).get();
         //when
         List<ResDiaryListDto> diaries = writtenDiaryRepository.findAllByMemberId(member.getMemberId())
-                .stream().map(writtenDiary -> ResDiaryListDto.builder()
+                .stream()
+                .filter(writtenDiary -> !writtenDiary.getDiary().getIsShared())
+                .map(writtenDiary -> ResDiaryListDto.builder()
                         .title(writtenDiary.getDiary().getTitle())
                         .context(writtenDiary.getDiary().getContext())
                         .location(writtenDiary.getDiary().getLocation())
@@ -250,8 +271,167 @@ class DiaryServiceImplTest {
         );
     }
 
+    @Test
+    @DisplayName("공유 다이어리 이어쓰기 - rewriteSharedDiary")
+    @DirtiesContext
+    public void updateSharedDiary() {
+        //given
+        Member writer = memberRepository.findByEmail("lopahn2@gmail.com").get();
+        Member receiver = memberRepository.findByEmail("lopahn5@gmail.com").get();
+
+        ReqWriteDiaryDto reqWriteDiaryDto = ReqWriteDiaryDto.builder()
+                .title("shared diary title")
+                .context("shared diary text")
+                .location("강서구 화곡동")
+                .weatherCode("BAD")
+                .build();
+        HashMap<String, Object> gptReturn = MockGPTService.getHashTagAndImage(reqWriteDiaryDto.getContext());
+        Diary diary = reqWriteDiaryDto.toDiary();
+        List<String> hashTags = (List<String> )gptReturn.get("hashTags");
+
+        hashTags.stream().forEach(hashTag ->
+                diary.addHashTag(HashTag.builder()
+                        .hashTag(hashTag)
+                        .build())
+        );
+
+        diary.addThumbnailUrl(gptReturn.get("Image").toString());
+
+        diary.addWrittenDiary(WrittenDiary.builder()
+                .memberId(writer.getMemberId())
+                .writtenDate(getNowDate())
+                .build());
+        diaryRepository.save(diary);
+
+        HashMap<String, Object> reqSharedDiaryDto = new HashMap<>();
+        reqSharedDiaryDto.put("diaryId", 2L);
+        reqSharedDiaryDto.put("code", writer.getCode());
+
+        String updatedContextOfSharedData = "new context!";
+        //when
+        Member diaryOwner = memberRepository.findByCode(reqSharedDiaryDto.get("code").toString()).orElseThrow(()->{throw new CustomException(StatusCode.NOT_FOUND);});
+        writtenDiaryRepository.findAllByMemberId(diaryOwner.getMemberId()).stream()
+                .forEach(writtenDiary -> {
+
+                    if (writtenDiary.getDiary().getDiaryId() == reqSharedDiaryDto.get("diaryId")) {
+                        Diary sharedDiary = writtenDiary.getDiary();
+                        sharedDiary.updateContext(updatedContextOfSharedData);
+                        DiaryToFriend diaryToFriend = diaryToFriendRepository
+                                .findByDiaryAndFriendId(sharedDiary, receiver.getMemberId())
+                                .orElseGet(() -> DiaryToFriend.builder().friendId(receiver.getMemberId()).build());
+
+                        sharedDiary.updateSharedStatus();
+                        diaryToFriend.updateDiary(sharedDiary);
+
+                        if(!diaryToFriendRepository.existsByFriendId(receiver.getMemberId()))
+                            diaryToFriendRepository.save(diaryToFriend);
+                    }
+                });
+
+        //then
+        List<DiaryToFriend> assertDiary = diaryToFriendRepository.findAllByFriendId(receiver.getMemberId());
+        Assertions.assertAll(
+                () -> assertThat(assertDiary.size()).isEqualTo(1),
+                () -> assertThat(assertDiary.get(0).getDiary().getContext()).isEqualTo(updatedContextOfSharedData)
+        );
+    }
+
+    @Test
+    @DisplayName("공유다이어리 목록 확인 - readSharedDiary")
+    @DirtiesContext
+    public void getSharedDiary() {
+        //given
+        Member writer = memberRepository.findByEmail("lopahn2@gmail.com").get();
+        Member receiver = memberRepository.findByEmail("lopahn5@gmail.com").get();
+
+        ReqWriteDiaryDto reqWriteDiaryDto = ReqWriteDiaryDto.builder()
+                .title("shared diary title")
+                .context("shared diary text")
+                .location("강서구 화곡동")
+                .weatherCode("BAD")
+                .build();
+        HashMap<String, Object> gptReturn = MockGPTService.getHashTagAndImage(reqWriteDiaryDto.getContext());
+        Diary diary = reqWriteDiaryDto.toDiary();
+
+        List<String> hashTags = (List<String> )gptReturn.get("hashTags");
+
+        hashTags.stream().forEach(hashTag ->
+                diary.addHashTag(HashTag.builder()
+                        .hashTag(hashTag)
+                        .build())
+        );
+
+        diary.addThumbnailUrl(gptReturn.get("Image").toString());
+
+        diary.addWrittenDiary(WrittenDiary.builder()
+                .memberId(writer.getMemberId())
+                .writtenDate(getNowDate())
+                .build());
+        diary.updateSharedStatus();
+        diaryRepository.save(diary);
+
+        HashMap<String, Object> reqSharedDiaryDto = new HashMap<>();
+        reqSharedDiaryDto.put("diaryId", 2L);
+        reqSharedDiaryDto.put("code", writer.getCode());
+
+        String updatedContextOfSharedData = "new context!";
+
+        Member diaryOwner = memberRepository.findByCode(reqSharedDiaryDto.get("code").toString()).orElseThrow(()->{throw new CustomException(StatusCode.NOT_FOUND);});
+        writtenDiaryRepository.findAllByMemberId(diaryOwner.getMemberId()).stream()
+                .forEach(writtenDiary -> {
+
+                    if (writtenDiary.getDiary().getDiaryId() == reqSharedDiaryDto.get("diaryId")) {
+                        Diary sharedDiary = writtenDiary.getDiary();
+                        sharedDiary.updateContext(updatedContextOfSharedData);
+                        DiaryToFriend diaryToFriend = diaryToFriendRepository
+                                .findByDiaryAndFriendId(sharedDiary, receiver.getMemberId())
+                                .orElseGet(() -> DiaryToFriend.builder().friendId(receiver.getMemberId()).build());
+
+                        sharedDiary.updateSharedStatus();
+                        diaryToFriend.updateDiary(sharedDiary);
+
+                        if(!diaryToFriendRepository.existsByFriendId(receiver.getMemberId()))
+                            diaryToFriendRepository.save(diaryToFriend);
+                    }
+                });
+        //when
+        List<ResDiaryListDto> sharedDiaries = new ArrayList<>();
+        writtenDiaryRepository.findAllByMemberId(writer.getMemberId()).stream()
+                        .forEach(d -> {
+                            diaryRepository.findAllByDiaryIdAndIsShared(d.getDiary().getDiaryId(), true).stream()
+                                            .forEach(sd->{
+                                                sharedDiaries.add(ResDiaryListDto.builder()
+                                                        .diaryId(sd.getDiaryId())
+                                                        .title(sd.getTitle())
+                                                        .location(sd.getLocation())
+                                                        .weatherCode(sd.getWeatherCode())
+                                                        .thumbnailUrl(sd.getThumbnailUrl())
+                                                        .hashTagList(sd.getHashTags())
+                                                        .build());
+                                            });
+                        });
+
+        diaryToFriendRepository.findAllByFriendId(writer.getMemberId()).stream()
+                .forEach(eDiary-> {
+                    sharedDiaries.add(ResDiaryListDto.builder()
+                            .diaryId(eDiary.getDiary().getDiaryId())
+                            .title(eDiary.getDiary().getTitle())
+                            .location(eDiary.getDiary().getLocation())
+                            .weatherCode(eDiary.getDiary().getWeatherCode())
+                            .thumbnailUrl(eDiary.getDiary().getThumbnailUrl())
+                            .hashTagList(eDiary.getDiary().getHashTags())
+                            .build());
+                });
+
+        //then
+        Assertions.assertAll(
+                () -> assertThat(sharedDiaries.size()).isEqualTo(1)
+        );
+    }
+
     private String getNowDate() {
         // 현재 시간을 가져오기
+
         Timestamp now = new Timestamp(System.currentTimeMillis());
 
         // 날짜 형식 지정

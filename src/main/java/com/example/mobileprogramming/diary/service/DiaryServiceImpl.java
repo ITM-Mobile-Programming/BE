@@ -6,12 +6,16 @@ import com.example.mobileprogramming.diary.dto.ReqWriteDiaryDto;
 import com.example.mobileprogramming.diary.dto.ResDiaryListDto;
 import com.example.mobileprogramming.diary.dto.ResWriteDiaryDto;
 import com.example.mobileprogramming.diary.entity.Diary;
+import com.example.mobileprogramming.diary.entity.DiaryToFriend;
 import com.example.mobileprogramming.diary.entity.HashTag;
 import com.example.mobileprogramming.diary.entity.WrittenDiary;
 import com.example.mobileprogramming.diary.repository.DiaryRepository;
+import com.example.mobileprogramming.diary.repository.DiaryToFriendRepository;
 import com.example.mobileprogramming.diary.repository.WrittenDiaryRepository;
 import com.example.mobileprogramming.handler.CustomException;
 import com.example.mobileprogramming.handler.StatusCode;
+import com.example.mobileprogramming.member.entity.Member;
+import com.example.mobileprogramming.member.repository.MemberRepository;
 import com.example.mobileprogramming.security.dto.AuthorizerDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +34,8 @@ public class DiaryServiceImpl implements DiaryService {
     private final GptService gptService;
     private final DiaryRepository diaryRepository;
     private final WrittenDiaryRepository writtenDiaryRepository;
+    private final MemberRepository memberRepository;
+    private final DiaryToFriendRepository diaryToFriendRepository;
     @Override
     @Transactional
     public ResWriteDiaryDto saveDiary(ReqWriteDiaryDto reqWriteDiaryDto, AuthorizerDto authorizerDto) {
@@ -85,7 +92,7 @@ public class DiaryServiceImpl implements DiaryService {
 
     @Override
     public void checkCreatingTwice(AuthorizerDto authorizerDto) {
-        String writtenDate = writtenDiaryRepository.findByMemberId(authorizerDto.getMemberId()).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND)).getWrittenDate();
+        String writtenDate = writtenDiaryRepository.findTopByMemberIdOrderByCreatedDateDesc(authorizerDto.getMemberId()).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND)).getWrittenDate();
         if(writtenDate.equals(getNowDate())) throw new CustomException(StatusCode.FORBIDDEN_CREATING_TWICE);
     }
 
@@ -114,8 +121,9 @@ public class DiaryServiceImpl implements DiaryService {
     public List<ResDiaryListDto> getDiary(AuthorizerDto authorizerDto) {
 
         return writtenDiaryRepository.findAllByMemberId(authorizerDto.getMemberId())
-                .stream().map(writtenDiary -> ResDiaryListDto.builder()
-                        .diaryId(writtenDiary.getDiary().getDiaryId())
+                .stream()
+                .filter(writtenDiary -> !writtenDiary.getDiary().getIsShared())
+                .map(writtenDiary -> ResDiaryListDto.builder()
                         .title(writtenDiary.getDiary().getTitle())
                         .context(writtenDiary.getDiary().getContext())
                         .location(writtenDiary.getDiary().getLocation())
@@ -123,6 +131,78 @@ public class DiaryServiceImpl implements DiaryService {
                         .thumbnailUrl(writtenDiary.getDiary().getThumbnailUrl())
                         .hashTagList(writtenDiary.getDiary().getHashTags())
                         .build()).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void updateSharedDiary(Long diaryId, String code,String updatedContext ,AuthorizerDto authorizerDto) {
+        Member diaryOwner = memberRepository.findByCode(code).orElseThrow(()->{throw new CustomException(StatusCode.NOT_FOUND);});
+        writtenDiaryRepository.findAllByMemberId(diaryOwner.getMemberId()).stream()
+                .forEach(writtenDiary -> {
+                    if (writtenDiary.getDiary().getDiaryId() == diaryId) {
+                        Diary sharedDiary = writtenDiary.getDiary();
+                        sharedDiary.updateContext(updatedContext);
+                        DiaryToFriend diaryToFriend = diaryToFriendRepository
+                                .findByDiaryAndFriendId(sharedDiary, authorizerDto.getMemberId())
+                                .orElseGet(() -> DiaryToFriend.builder().friendId(authorizerDto.getMemberId()).build());
+
+                        sharedDiary.updateSharedStatus();
+                        diaryToFriend.updateDiary(sharedDiary);
+
+                        if(!diaryToFriendRepository.existsByFriendId(authorizerDto.getMemberId()))
+                            diaryToFriendRepository.save(diaryToFriend);
+                    }
+                });
+
+
+    }
+
+    @Override
+    public List<ResDiaryListDto> getSharedDiary(AuthorizerDto authorizerDto) {
+        List<ResDiaryListDto> sharedDiaries = new ArrayList<>();
+        writtenDiaryRepository.findAllByMemberId(authorizerDto.getMemberId()).stream()
+                .forEach(d -> {
+                    diaryRepository.findAllByDiaryIdAndIsShared(d.getDiary().getDiaryId(), true).stream()
+                            .forEach(sd->{
+                                sharedDiaries.add(ResDiaryListDto.builder()
+                                        .diaryId(sd.getDiaryId())
+                                        .title(sd.getTitle())
+                                        .location(sd.getLocation())
+                                        .weatherCode(sd.getWeatherCode())
+                                        .thumbnailUrl(sd.getThumbnailUrl())
+                                        .hashTagList(sd.getHashTags())
+                                        .build());
+                            });
+                });
+
+        diaryToFriendRepository.findAllByFriendId(authorizerDto.getMemberId()).stream()
+                .forEach(eDiary-> {
+                    sharedDiaries.add(ResDiaryListDto.builder()
+                            .diaryId(eDiary.getDiary().getDiaryId())
+                            .title(eDiary.getDiary().getTitle())
+                            .location(eDiary.getDiary().getLocation())
+                            .weatherCode(eDiary.getDiary().getWeatherCode())
+                            .thumbnailUrl(eDiary.getDiary().getThumbnailUrl())
+                            .hashTagList(eDiary.getDiary().getHashTags())
+                            .build());
+                });
+        return sharedDiaries;
+    }
+
+    @Override
+    public ResDiaryListDto getDateDiary(String date, AuthorizerDto authorizerDto) {
+        WrittenDiary writtenDiary = writtenDiaryRepository.findByMemberIdAndWrittenDate(authorizerDto.getMemberId(), date).orElseThrow(() -> {
+            throw new CustomException(StatusCode.NOT_FOUND);
+        });
+
+        ResDiaryListDto resDiaryListDto = ResDiaryListDto.builder()
+                .title(writtenDiary.getDiary().getTitle())
+                .context(writtenDiary.getDiary().getContext())
+                .location(writtenDiary.getDiary().getLocation())
+                .weatherCode(writtenDiary.getDiary().getWeatherCode())
+                .hashTagList(writtenDiary.getDiary().getHashTags())
+                .build();
+        return resDiaryListDto;
     }
 
     private String getNowDate() {

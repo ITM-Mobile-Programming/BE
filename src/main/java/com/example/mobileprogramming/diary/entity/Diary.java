@@ -40,6 +40,9 @@ public class Diary extends BaseTimeEntity {
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
+    @Column(name = "is_shared")
+    private Boolean isShared;
+
     @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<HashTag> hashTags = new ArrayList<>();
@@ -60,6 +63,7 @@ public class Diary extends BaseTimeEntity {
         this.weatherCode = weatherCode;
         this.mbtiCode = mbtiCode;
         this.thumbnailUrl = thumbnailUrl;
+        this.isShared = false;
     }
 
     public void addHashTag(HashTag hashTag) {
@@ -82,5 +86,8 @@ public class Diary extends BaseTimeEntity {
     }
     public void updateMbti(String mbtiCode) {
         this.mbtiCode = mbtiCode;
+    }
+    public void updateSharedStatus() {
+        this.isShared = true;
     }
 }

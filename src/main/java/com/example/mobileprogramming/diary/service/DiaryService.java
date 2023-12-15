@@ -23,4 +23,10 @@ public interface DiaryService {
     void deleteDiary(Long diaryId, AuthorizerDto authorizerDto);
 
     List<ResDiaryListDto> getDiary(AuthorizerDto authorizerDto);
+
+    void updateSharedDiary(Long diaryId, String code,String updatedContext ,AuthorizerDto authorizerDto);
+
+    List<ResDiaryListDto> getSharedDiary(AuthorizerDto authorizerDto);
+
+    ResDiaryListDto getDateDiary(String date,AuthorizerDto authorizerDto);
 }

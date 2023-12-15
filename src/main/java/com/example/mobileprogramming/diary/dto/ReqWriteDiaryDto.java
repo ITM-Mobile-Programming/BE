@@ -20,8 +20,9 @@ public class ReqWriteDiaryDto {
         this.context = context;
         this.location = location;
         this.weatherCode = weatherCode;
-//        this.mbtiCode = mbtiCode;
     }
+
+
 
     public Diary toDiary() {
         return Diary.builder()
@@ -29,7 +30,6 @@ public class ReqWriteDiaryDto {
                 .context(this.context)
                 .location(this.location)
                 .weatherCode(this.weatherCode)
-//                .mbtiCode(this.mbtiCode)
                 .build();
     }
 }

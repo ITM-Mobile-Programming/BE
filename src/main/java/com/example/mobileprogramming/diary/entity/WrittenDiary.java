@@ -15,7 +15,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Table(name = "written_diary")
-public class WrittenDiary {
+public class WrittenDiary extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "written_diary_id", nullable = false)

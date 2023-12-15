@@ -54,6 +54,11 @@ public class DiaryController {
         return ResponseEntity.ok(new Message(StatusCode.OK, diaryService.getDiary(getPODAuthorizer())));
     }
 
+    @PostMapping(value = "/dateSearch")
+    public ResponseEntity<Message> dailyDiary(@RequestBody HashMap<String, String> dateHash) {
+        return ResponseEntity.ok(new Message(StatusCode.OK, diaryService.getDateDiary(dateHash.get("writtenDate"),getPODAuthorizer())));
+    }
+
     @GetMapping(value = "/verification")
     public ResponseEntity<Message> verifyCreatingTwice() {
         diaryService.checkCreatingTwice(getPODAuthorizer());

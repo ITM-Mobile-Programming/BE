@@ -30,4 +30,8 @@ public class DiaryToFriend extends BaseTimeEntity {
     public DiaryToFriend(Long friendId) {
         this.friendId = friendId;
     }
+
+    public void updateDiary(Diary sharedDiary) {
+        this.diary = sharedDiary;
+    }
 }
