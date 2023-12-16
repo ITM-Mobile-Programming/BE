@@ -124,6 +124,7 @@ public class DiaryServiceImpl implements DiaryService {
                 .stream()
                 .filter(writtenDiary -> !writtenDiary.getDiary().getIsShared())
                 .map(writtenDiary -> ResDiaryListDto.builder()
+                        .diaryId(writtenDiary.getDiary().getDiaryId())
                         .title(writtenDiary.getDiary().getTitle())
                         .context(writtenDiary.getDiary().getContext())
                         .location(writtenDiary.getDiary().getLocation())
