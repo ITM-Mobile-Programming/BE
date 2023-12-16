@@ -1,9 +1,6 @@
 package com.example.mobileprogramming.diary.service;
 
-import com.example.mobileprogramming.diary.dto.ReqUpdateDiaryDto;
-import com.example.mobileprogramming.diary.dto.ReqWriteDiaryDto;
-import com.example.mobileprogramming.diary.dto.ResDiaryListDto;
-import com.example.mobileprogramming.diary.dto.ResWriteDiaryDto;
+import com.example.mobileprogramming.diary.dto.*;
 
 import com.example.mobileprogramming.security.dto.AuthorizerDto;
 
@@ -29,4 +26,6 @@ public interface DiaryService {
     List<ResDiaryListDto> getSharedDiary(AuthorizerDto authorizerDto);
 
     ResDiaryListDto getDateDiary(String date,AuthorizerDto authorizerDto);
+
+    ResMBTIRateDto getTotalMBTIRate(AuthorizerDto authorizerDto);
 }

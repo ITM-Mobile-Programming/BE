@@ -65,6 +65,11 @@ public class DiaryController {
         return ResponseEntity.ok(new Message(StatusCode.OK));
     }
 
+    @GetMapping(value = "/mbti")
+    public ResponseEntity<Message> totalMBTI() {
+        return ResponseEntity.ok(new Message(StatusCode.OK, diaryService.getTotalMBTIRate(getPODAuthorizer())));
+    }
+
 
 
 }
