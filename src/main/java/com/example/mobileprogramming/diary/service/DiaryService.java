@@ -28,4 +28,5 @@ public interface DiaryService {
     ResDiaryListDto getDateDiary(String date,AuthorizerDto authorizerDto);
 
     ResMBTIRateDto getTotalMBTIRate(AuthorizerDto authorizerDto);
+    ResMBTIRateDto getMonthMBTIRate(AuthorizerDto authorizerDto, String month);
 }

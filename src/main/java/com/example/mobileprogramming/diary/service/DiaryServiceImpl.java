@@ -23,6 +23,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -196,6 +198,70 @@ public class DiaryServiceImpl implements DiaryService {
         return resMBTIRateDto;
     }
 
+    @Override
+    public ResMBTIRateDto getMonthMBTIRate(AuthorizerDto authorizerDto, String month) {
+        ResMBTIRateDto resMBTIRateDto = ResMBTIRateDto.builder()
+                .ERate(0L)
+                .IRate(0L)
+                .NRate(0L)
+                .SRate(0L)
+                .FRate(0L)
+                .TRate(0L)
+                .PRate(0L)
+                .JRate(0L)
+                .build();
+
+        List<WrittenDiary> writtenDiaries = writtenDiaryRepository.findAllByMemberId(authorizerDto.getMemberId());
+
+        // MBTI 코드에 따른 카운트 집계
+        for (WrittenDiary writtenDiary : writtenDiaries) {
+
+            if (extractMonth(writtenDiary.getWrittenDate()).equals(month)) {
+
+                String mbti = writtenDiary.getDiary().getMbtiCode();
+                for (char character : mbti.toCharArray()) {
+                    switch (character) {
+                        case 'E':
+                            resMBTIRateDto.setERate(resMBTIRateDto.getERate() + 1);
+                            break;
+                        case 'I':
+                            resMBTIRateDto.setIRate(resMBTIRateDto.getIRate() + 1);
+                            break;
+                        case 'S':
+                            resMBTIRateDto.setSRate(resMBTIRateDto.getSRate() + 1);
+                            break;
+                        case 'N':
+                            resMBTIRateDto.setNRate(resMBTIRateDto.getNRate() + 1);
+                            break;
+                        case 'F':
+                            resMBTIRateDto.setFRate(resMBTIRateDto.getFRate() + 1);
+                            break;
+                        case 'T':
+                            resMBTIRateDto.setTRate(resMBTIRateDto.getTRate() + 1);
+                            break;
+                        case 'J':
+                            resMBTIRateDto.setJRate(resMBTIRateDto.getJRate() + 1);
+                            break;
+                        case 'P':
+                            resMBTIRateDto.setPRate(resMBTIRateDto.getPRate() + 1);
+                            break;
+                    }
+                }
+                // 비율 계산
+                long totalCount = writtenDiaries.size();
+                resMBTIRateDto.setERate((long) ((resMBTIRateDto.getERate() / (double) totalCount) * 100));
+                resMBTIRateDto.setIRate((long) ((resMBTIRateDto.getIRate() / (double) totalCount) * 100));
+                resMBTIRateDto.setSRate((long) ((resMBTIRateDto.getSRate() / (double) totalCount) * 100));
+                resMBTIRateDto.setNRate((long) ((resMBTIRateDto.getNRate() / (double) totalCount) * 100));
+                resMBTIRateDto.setFRate((long) ((resMBTIRateDto.getFRate() / (double) totalCount) * 100));
+                resMBTIRateDto.setTRate((long) ((resMBTIRateDto.getTRate() / (double) totalCount) * 100));
+                resMBTIRateDto.setJRate((long) ((resMBTIRateDto.getJRate() / (double) totalCount) * 100));
+                resMBTIRateDto.setPRate((long) ((resMBTIRateDto.getPRate() / (double) totalCount) * 100));
+            }
+        }
+
+        return resMBTIRateDto;
+    }
 
     @Override
     @Transactional
@@ -280,5 +346,17 @@ public class DiaryServiceImpl implements DiaryService {
         // 형식에 맞게 날짜 변환
         String formattedDate = dateFormat.format(new Date(now.getTime()));
         return formattedDate;
+    }
+    private static String extractMonth(String date) {
+
+        Pattern pattern = Pattern.compile("\\d+년(\\d+)월\\d+일");
+        Matcher matcher = pattern.matcher(date);
+
+        if (matcher.find()) {
+            String month = matcher.group(1);
+            return month;
+        } else {
+            return null;
+        }
     }
 }

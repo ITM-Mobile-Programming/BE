@@ -69,6 +69,10 @@ public class DiaryController {
     public ResponseEntity<Message> totalMBTI() {
         return ResponseEntity.ok(new Message(StatusCode.OK, diaryService.getTotalMBTIRate(getPODAuthorizer())));
     }
+    @GetMapping(value = "/mbti/month")
+    public ResponseEntity<Message> monthMBTI(@RequestBody HashMap<String, String> monthHash) {
+        return ResponseEntity.ok(new Message(StatusCode.OK, diaryService.getMonthMBTIRate(getPODAuthorizer(), monthHash.get("month"))));
+    }
 
 
 
