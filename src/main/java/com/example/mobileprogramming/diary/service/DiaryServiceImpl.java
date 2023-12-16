@@ -119,20 +119,25 @@ public class DiaryServiceImpl implements DiaryService {
 
     @Override
     public List<ResDiaryListDto> getDiary(AuthorizerDto authorizerDto) {
-
         return writtenDiaryRepository.findAllByMemberId(authorizerDto.getMemberId())
                 .stream()
-                .filter(writtenDiary -> !writtenDiary.getDiary().getIsShared())
-                .map(writtenDiary -> ResDiaryListDto.builder()
-                        .diaryId(writtenDiary.getDiary().getDiaryId())
-                        .title(writtenDiary.getDiary().getTitle())
-                        .context(writtenDiary.getDiary().getContext())
-                        .location(writtenDiary.getDiary().getLocation())
-                        .weatherCode(writtenDiary.getDiary().getWeatherCode())
-                        .thumbnailUrl(writtenDiary.getDiary().getThumbnailUrl())
-                        .hashTagList(writtenDiary.getDiary().getHashTags())
-                        .build()).collect(Collectors.toList());
+                .filter(writtenDiary -> writtenDiary.getDiary() != null && !writtenDiary.getDiary().getIsShared())
+                .map(writtenDiary -> {
+                    Diary diary = writtenDiary.getDiary();
+                    return ResDiaryListDto.builder()
+                            .diaryId(diary.getDiaryId())
+                            .title(diary.getTitle())
+                            .context(diary.getContext())
+                            .location(diary.getLocation())
+                            .weatherCode(diary.getWeatherCode())
+                            .thumbnailUrl(diary.getThumbnailUrl())
+                            .hashTagList(diary.getHashTags())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
+
+
 
     @Override
     @Transactional
