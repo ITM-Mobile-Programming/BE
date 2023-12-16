@@ -121,11 +121,8 @@ public class DiaryServiceImpl implements DiaryService {
     public List<ResDiaryListDto> getDiary(AuthorizerDto authorizerDto) {
         return writtenDiaryRepository.findAllByMemberId(authorizerDto.getMemberId())
                 .stream()
-//                .filter(writtenDiary -> writtenDiary.getDiary() != null && !writtenDiary.getDiary().getIsShared())
+                .filter(writtenDiary -> !writtenDiary.getDiary().getIsShared())
                 .map(writtenDiary -> {
-                    if (!writtenDiary.getDiary().getIsShared()) {
-                        return ResDiaryListDto.builder().build();
-                    }
                     Diary diary = writtenDiary.getDiary();
                     return ResDiaryListDto.builder()
                             .diaryId(diary.getDiaryId())
