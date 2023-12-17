@@ -333,6 +333,7 @@ public class DiaryServiceImpl implements DiaryService {
                 .context(writtenDiary.getDiary().getContext())
                 .location(writtenDiary.getDiary().getLocation())
                 .weatherCode(writtenDiary.getDiary().getWeatherCode())
+                .thumbnailUrl(writtenDiary.getDiary().getThumbnailUrl())
                 .hashTagList(writtenDiary.getDiary().getHashTags())
                 .build();
         return resDiaryListDto;
