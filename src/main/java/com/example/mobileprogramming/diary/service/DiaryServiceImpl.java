@@ -110,9 +110,6 @@ public class DiaryServiceImpl implements DiaryService {
     public void deleteDiary(Long diaryId, AuthorizerDto authorizerDto) {
         Diary diary = diaryRepository.findById(diaryId).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
         Long hostId = writtenDiaryRepository.findByDiary(diary).get().getMemberId();
-        System.out.println("@@@");
-        System.out.println(hostId);
-        System.out.println(authorizerDto.getMemberId());
         if (authorizerDto.getMemberId() != hostId) throw new CustomException(StatusCode.FORBIDDEN);
 
         diaryRepository.delete(diary);
