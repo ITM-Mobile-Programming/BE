@@ -278,7 +278,7 @@ public class DiaryServiceImpl implements DiaryService {
                         sharedDiary.updateSharedStatus();
                         diaryToFriend.updateDiary(sharedDiary);
 
-                        if(!diaryToFriendRepository.existsByFriendId(authorizerDto.getMemberId()))
+                        if(!diaryToFriendRepository.existsByDiaryAndFriendId(sharedDiary, authorizerDto.getMemberId()))
                             diaryToFriendRepository.save(diaryToFriend);
                     }
                 });

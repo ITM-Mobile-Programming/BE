@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface DiaryToFriendRepository extends JpaRepository<DiaryToFriend, Long> {
-    Boolean existsByFriendId(Long friendId);
+    Boolean existsByDiaryAndFriendId(Diary diary, Long friendId);
 
     Optional<DiaryToFriend> findByDiaryAndFriendId(Diary sharedDiary, Long friendId);
 
