@@ -107,6 +107,7 @@ public class MemberServiceImpl implements MemberService{
         Member member = memberRepository.findById(authorizerDto.getMemberId()).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
         return ResMemberInfoDto.builder()
                 .diaryCount(writtenDiaryRepository.countByMemberId(member.getMemberId()))
+                .memberId(member.getMemberId())
                 .nickName(member.getNickName())
                 .email(member.getEmail())
                 .code(member.getCode())
