@@ -109,8 +109,10 @@ public class DiaryServiceImpl implements DiaryService {
     @Transactional
     public void deleteDiary(Long diaryId, AuthorizerDto authorizerDto) {
         Diary diary = diaryRepository.findById(diaryId).orElseThrow(() -> new CustomException(StatusCode.NOT_FOUND));
-        Long hostId = writtenDiaryRepository.findByDiary(diary).get().getWrittenDiaryId();
-
+        Long hostId = writtenDiaryRepository.findByDiary(diary).get().getMemberId();
+        System.out.println("@@@");
+        System.out.println(hostId);
+        System.out.println(authorizerDto.getMemberId());
         if (authorizerDto.getMemberId() != hostId) throw new CustomException(StatusCode.FORBIDDEN);
 
         diaryRepository.delete(diary);
@@ -321,6 +323,9 @@ public class DiaryServiceImpl implements DiaryService {
 
     @Override
     public ResDiaryListDto getDateDiary(String date, AuthorizerDto authorizerDto) {
+        System.out.println("@@@@");
+        System.out.println(date);
+        System.out.println(authorizerDto.getMemberId());
         WrittenDiary writtenDiary = writtenDiaryRepository.findByMemberIdAndWrittenDate(authorizerDto.getMemberId(), date).orElseThrow(() -> {
             throw new CustomException(StatusCode.NOT_FOUND);
         });

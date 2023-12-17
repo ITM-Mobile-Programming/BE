@@ -21,5 +21,4 @@ public interface WrittenDiaryRepository extends JpaRepository<WrittenDiary, Long
 
     Optional<WrittenDiary> findByMemberIdAndWrittenDate(Long memberId, String writtenDate);
 
-
 }
